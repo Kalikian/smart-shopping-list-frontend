@@ -1,4 +1,3 @@
-// Floating Action Button (placeholder)
 type FabProps = {
   disabled?: boolean;
   title?: string;

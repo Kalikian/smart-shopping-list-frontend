@@ -1,18 +1,41 @@
-// List section showing header with counters + items and visible card border
-import ListItem, { type Item } from "./ListItem";
+// List section showing header with counters + items and visible card border.
+// Maps category -> fixed brand colors (CSS variables).
+// If no category is chosen, use a neutral gray (CSS var with fallback).
+
+import ListItem, { type Item, type Category } from "./ListItem";
+
+// Neutral gray fallback: uses --cat-neutral if defined, else medium gray.
+const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
+
+const CATEGORY_COLORS: Record<Category, string> = {
+  Produce: `hsl(var(--cat-produce))`,
+  Dairy: `hsl(var(--cat-dairy))`,
+  "Meat & Fish": `hsl(var(--cat-meat))`,
+  Bakery: `hsl(var(--cat-bakery))`,
+  "Pantry (Dry)": `hsl(var(--cat-pantry))`,
+  Beverages: `hsl(var(--cat-beverages))`,
+  Frozen: `hsl(var(--cat-frozen))`,
+  "Snacks & Sweets": `hsl(var(--cat-snacks))`,
+  "Household & Care": `hsl(var(--cat-household))`,
+};
+
+// ONE-ARG function now: item -> color (or neutral)
+function colorForItem(item: Item): string {
+  if (item.category && CATEGORY_COLORS[item.category]) {
+    return CATEGORY_COLORS[item.category];
+  }
+  return NEUTRAL;
+}
 
 type ListProps = {
   items: Item[];
   onToggle: (id: string) => void;
+  onChange: (id: string, patch: Partial<Item>) => void;
 };
 
-export default function List({ items, onToggle }: ListProps) {
+export default function List({ items, onToggle, onChange }: ListProps) {
   const total = items.length;
   const done = items.filter((i) => i.done).length;
-
-  // Cycle through 4 pleasant hues
-  const hues = ["--c1", "--c2", "--c3", "--c4"] as const;
-  const colorForIndex = (i: number) => `hsl(var(${hues[i % hues.length]}))`;
 
   return (
     <section className="mt-5 card p-0 overflow-hidden border border-black/10">
@@ -30,8 +53,14 @@ export default function List({ items, onToggle }: ListProps) {
       </header>
 
       <ul className="divide-y divide-black/5">
-        {items.map((it, i) => (
-          <ListItem key={it.id} item={it} onToggle={onToggle} color={colorForIndex(i)} />
+        {items.map((it) => (
+          <ListItem
+            key={it.id}
+            item={it}
+            color={colorForItem(it)}
+            onToggle={onToggle}
+            onChange={(patch) => onChange(it.id, patch)}
+          />
         ))}
       </ul>
     </section>

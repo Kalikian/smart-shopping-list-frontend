@@ -24,11 +24,16 @@
   --shadow-sm: 0 1px 2px 0 hsl(220 43% 11% / 0.04);
   --shadow-md: 0 8px 24px -8px hsl(220 43% 11% / 0.12);
 
-  /* 4 friendly accent hues for list rows */
-  --c1: 210 90% 52%; /* blue */
-  --c2: 160 70% 40%; /* mint/teal */
-  --c3: 35 100% 50%; /* amber */
-  --c4: 10 85% 56%; /* coral */
+  --cat-produce: 145 62% 40%;
+  --cat-dairy: 220 70% 50%;
+  --cat-meat: 355 70% 50%;
+  --cat-bakery: 28 90% 55%;
+  --cat-pantry: 35 85% 45%;
+  --cat-beverages: 188 72% 45%;
+  --cat-frozen: 200 80% 50%;
+  --cat-snacks: 330 65% 55%;
+  --cat-household: 265 55% 55%;
+  --cat-neutral: 0 0% 55%;
 }
 
 @media (prefers-color-scheme: dark) {

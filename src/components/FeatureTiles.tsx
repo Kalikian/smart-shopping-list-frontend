@@ -1,4 +1,3 @@
-// Tiny static feature grid
 export default function FeatureTiles() {
   const data = [
     { icon: "⚡", title: "Fast input", desc: "Add multiple items quickly." },
