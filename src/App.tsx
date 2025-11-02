@@ -8,6 +8,7 @@ import FeatureTiles from "./components/FeatureTiles";
 import List from "./components/List";
 import Fab from "./components/Fab";
 import type { Item } from "./components/ListItem";
+import ThemeSwitcher from "./components/ThemeSwitcher";
 
 export default function App() {
   // Demo data (EN categories)
@@ -42,8 +43,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--text))]">
+    <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
       <AppHeader open={open} total={total} />
+
+      {/* Theme switch */}
+      <div className="mx-auto max-w-screen-sm safe-x">
+        <ThemeSwitcher />
+      </div>
 
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
         <HeroCard creating={creating} onCreate={handleCreateList} />

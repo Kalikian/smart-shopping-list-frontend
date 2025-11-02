@@ -1,7 +1,6 @@
 /* src/styles/theme.css */
-/* Design tokens + small utility components (no @tailwind here!) */
-
-@reference "tailwindcss";
+/* Design tokens + utilities + primitives (Tailwind v4 compatible).
+   Wichtig: KEIN '@tailwind' hier – nur in index.css importieren.          */
 
 /* ---------- 1) Tokens (light + dark) ---------- */
 :root {
@@ -24,6 +23,7 @@
   --shadow-sm: 0 1px 2px 0 hsl(220 43% 11% / 0.04);
   --shadow-md: 0 8px 24px -8px hsl(220 43% 11% / 0.12);
 
+  /* Category hues */
   --cat-produce: 145 62% 40%;
   --cat-dairy: 220 70% 50%;
   --cat-meat: 355 70% 50%;
@@ -56,28 +56,31 @@
   }
 }
 
-/* ---------- 2) Base resets ---------- */
+/* ---------- 2) Base ---------- */
 @layer base {
   html,
   body,
   #root {
     height: 100%;
   }
+
+  /* Transparent, damit Verläufe sichtbar sind */
   body {
-    background-color: hsl(var(--bg));
+    background-color: transparent;
     color: hsl(var(--text));
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
 }
 
-/* ---------- 3) Component primitives ---------- */
+/* ---------- 3) Components (primitives) ---------- */
 @layer components {
   .card {
-    @apply rounded-2xl bg-white shadow-sm ring-1 ring-black/5;
+    @apply rounded-2xl shadow-sm ring-1 ring-black/5;
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
     background-color: hsl(var(--surface));
@@ -94,11 +97,13 @@
   .btn-primary:hover {
     background-color: hsl(var(--accent-600));
   }
+
   .btn-ghost {
     @apply ring-1 ring-gray-300 hover:bg-gray-50;
   }
+
   .btn-icon {
-    @apply inline-flex items-center justify-center rounded-xl w-11 h-11;
+    @apply inline-flex items-center justify-center w-11 h-11;
     border-radius: var(--radius-sm);
     background-color: hsl(var(--accent));
     color: hsl(var(--brand-contrast));
@@ -139,4 +144,143 @@
   .safe-b {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
+}
+
+/* ---------- 5) Background presets (no duplicates) ---------- */
+
+/* a) Neue Haupt-Variante mit steuerbaren Spots + Mobile-Finetuning */
+.bg-app {
+  --bg-base: hsl(var(--bg));
+  --bg-spot-a: hsl(var(--accent) / 0.16); /* kühler Spot links/oben   */
+  --bg-spot-b: hsl(350 90% 70% / 0.18); /* pinker Spot rechts/unten */
+
+  background: radial-gradient(
+      900px 500px at 10% -10%,
+      var(--bg-spot-a) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 120% 40%,
+      var(--bg-spot-b) 0%,
+      transparent 60%
+    ),
+    var(--bg-base);
+}
+
+/* Mobile: pinken Spot deutlich abschwächen (oder auf transparent setzen) */
+@media (max-width: 640px) {
+  .bg-app {
+    --bg-spot-b: hsl(350 90% 70% / 0.06); /* oder: transparent */
+    background: radial-gradient(
+        600px 300px at 15% -10%,
+        var(--bg-spot-a) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        600px 300px at 100% 30%,
+        var(--bg-spot-b) 0%,
+        transparent 60%
+      ),
+      var(--bg-base);
+  }
+}
+
+/* b) Klassischer Pastell-Verlauf (dezenter) */
+.bg-pastel-radial {
+  background: radial-gradient(
+      1200px 600px at 10% -10%,
+      #eaf0ff 0%,
+      transparent 60%
+    ),
+    radial-gradient(1200px 600px at 110% 40%, #fff1fa 0%, transparent 60%),
+    #f6f8ff;
+}
+
+/* c) Dezent gestreift */
+.bg-subtle-stripes {
+  background: repeating-linear-gradient(
+    135deg,
+    #f7f9ff 0 22px,
+    #f1f5ff 22px 44px
+  );
+}
+
+/* d) Satter Radial-Look in Token-Farben */
+.bg-radial-strong {
+  background: radial-gradient(
+      900px 500px at 10% -10%,
+      hsl(var(--accent) / 0.18) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 120% 40%,
+      hsl(350 90% 70% / 0.18) 0%,
+      transparent 60%
+    ),
+    hsl(var(--bg));
+}
+
+/* ---------- 6) Theme presets (token overrides only) ---------- */
+
+.theme-candy {
+  --bg: 30 100% 97%;
+  --surface: 0 0% 100%;
+  --text: 222 47% 11%;
+  --accent: 345 85% 55%;
+  --accent-600: 345 85% 48%;
+  --accent-100: 345 85% 95%;
+}
+
+.theme-forest {
+  --bg: 160 60% 97%;
+  --surface: 0 0% 100%;
+  --text: 222 47% 11%;
+  --accent: 160 84% 39%;
+  --accent-600: 160 84% 33%;
+  --accent-100: 152 81% 96%;
+}
+
+.theme-ocean {
+  --bg: 210 50% 97%;
+  --surface: 0 0% 100%;
+  --text: 222 47% 11%;
+  --accent: 210 80% 45%;
+  --accent-600: 210 80% 38%;
+  --accent-100: 210 80% 94%;
+}
+
+.theme-lavender {
+  --bg: 250 60% 97%;
+  --surface: 0 0% 100%;
+  --text: 230 40% 12%;
+  --accent: 258 85% 60%;
+  --accent-600: 258 85% 52%;
+  --accent-100: 258 85% 95%;
+}
+
+.theme-sunset {
+  --bg: 20 90% 97%;
+  --surface: 0 0% 100%;
+  --text: 222 47% 11%;
+  --accent: 25 85% 56%;
+  --accent-600: 25 85% 48%;
+  --accent-100: 25 85% 94%;
+}
+
+.theme-mint {
+  --bg: 155 70% 97%;
+  --surface: 0 0% 100%;
+  --text: 222 47% 11%;
+  --accent: 172 66% 45%;
+  --accent-600: 172 66% 38%;
+  --accent-100: 172 66% 93%;
+}
+
+.theme-paper {
+  --bg: 240 20% 97%;
+  --surface: 0 0% 100%;
+  --text: 222 47% 11%;
+  --accent: 222 85% 56%;
+  --accent-600: 222 85% 48%;
+  --accent-100: 222 85% 94%;
 }
