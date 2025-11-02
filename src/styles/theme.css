@@ -23,6 +23,12 @@
 
   --shadow-sm: 0 1px 2px 0 hsl(220 43% 11% / 0.04);
   --shadow-md: 0 8px 24px -8px hsl(220 43% 11% / 0.12);
+
+  /* 4 friendly accent hues for list rows */
+  --c1: 210 90% 52%; /* blue */
+  --c2: 160 70% 40%; /* mint/teal */
+  --c3: 35 100% 50%; /* amber */
+  --c4: 10 85% 56%; /* coral */
 }
 
 @media (prefers-color-scheme: dark) {
