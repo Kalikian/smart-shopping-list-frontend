@@ -146,9 +146,9 @@
   }
 }
 
-/* ---------- 5) Background presets (no duplicates) ---------- */
+/* ---------- 5) Background presets ---------- */
 
-/* a) Neue Haupt-Variante mit steuerbaren Spots + Mobile-Finetuning */
+/* a) Hauptverlauf mit steuerbaren Spots + Mobile-Finetuning */
 .bg-app {
   --bg-base: hsl(var(--bg));
   --bg-spot-a: hsl(var(--accent) / 0.16); /* kühler Spot links/oben   */
@@ -167,7 +167,7 @@
     var(--bg-base);
 }
 
-/* Mobile: pinken Spot deutlich abschwächen (oder auf transparent setzen) */
+/* Mobile: pinken Spot abschwächen (oder transparent setzen) */
 @media (max-width: 640px) {
   .bg-app {
     --bg-spot-b: hsl(350 90% 70% / 0.06); /* oder: transparent */
@@ -185,7 +185,7 @@
   }
 }
 
-/* b) Klassischer Pastell-Verlauf (dezenter) */
+/* b) Dezenter Pastell-Verlauf */
 .bg-pastel-radial {
   background: radial-gradient(
       1200px 600px at 10% -10%,
@@ -220,7 +220,7 @@
     hsl(var(--bg));
 }
 
-/* ---------- 6) Theme presets (token overrides only) ---------- */
+/* ---------- 6) Theme presets (token overrides) ---------- */
 
 .theme-candy {
   --bg: 30 100% 97%;
