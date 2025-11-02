@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/index.css */
+@import "tailwindcss";
+@import "./styles/theme.css";
 
 /* Base layout and font adjustments */
 html,
