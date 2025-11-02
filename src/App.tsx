@@ -1,13 +1,42 @@
 // src/App.tsx
-// Mobile-first landing using our design tokens & utility classes.
-// Note: App copy and comments are in English.
+// Integrate AppHeader and render a simple interactive items list (mock data).
+// Mobile-first, minimal logic: toggle 'done' and live counters.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import AppHeader from "./components/AppHeader";
+
+type Item = {
+  id: string;
+  name: string;
+  qty?: string;
+  done: boolean;
+  category?: string;
+};
 
 export default function App() {
+  // Initialize once with a literal array (no ESLint deps issue)
+  const [items, setItems] = useState<Item[]>([
+    { id: "i1", name: "Bananas", qty: "6", done: false },
+    { id: "i2", name: "Pasta", qty: "2 × 500g", done: true },
+    { id: "i3", name: "Milk", qty: "2 × 1L", done: false },
+    { id: "i4", name: "Olive oil", qty: "1", done: true },
+  ]);
   const [creating, setCreating] = useState(false);
 
-  // Mock handler for primary action (we'll wire real routes later)
+// derive total and done
+const { total, done } = useMemo(() => {
+  const total = items.length;
+  const done = items.filter((i) => i.done).length;
+  return { total, done };
+}, [items]);
+
+  // Toggle an item's 'done' flag
+  const toggleItem = (id: string) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, done: !it.done } : it))
+    );
+  };
+
   const handleCreateList = () => {
     setCreating(true);
     setTimeout(() => setCreating(false), 700);
@@ -15,28 +44,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--text))]">
-      {/* Top App Bar */}
-      <header className="appbar safe-x">
-        <div className="mx-auto max-w-screen-sm flex items-center justify-between py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl" aria-hidden>🛒</span>
-            <h1 className="text-lg font-semibold tracking-tight">Smart Shopping List</h1>
-          </div>
+      <AppHeader open={total} total={done} />
 
-          {/* Placeholder icon button */}
-          <button
-            type="button"
-            className="btn-icon"
-            title="Coming soon"
-            aria-label="Settings (coming soon)"
-            disabled
-          >
-            ⚙️
-          </button>
-        </div>
-      </header>
-
-      {/* Content */}
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
         {/* Hero Card */}
         <section className="card p-5 mt-2">
@@ -65,30 +74,51 @@ export default function App() {
           </div>
         </section>
 
-        {/* Lists preview (cards) */}
-        <section className="mt-5 grid gap-3">
-          {[
-            { name: "Weekly Groceries", items: 18, updated: "Today" },
-            { name: "BBQ Party", items: 12, updated: "Yesterday" },
-            { name: "Pharmacy Run", items: 6, updated: "2 days ago" },
-          ].map((list) => (
-            <article key={list.name} className="card p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">{list.name}</h3>
-                  <p className="text-sm text-[hsl(var(--muted))]">
-                    {list.items} items • updated {list.updated}
-                  </p>
-                </div>
-                <span className="chip" aria-label="status">
-                  🧾 List
-                </span>
-              </div>
-            </article>
-          ))}
+        {/* --- Current list (mock items) --- */}
+        <section className="mt-5 card p-0 overflow-hidden">
+          <header className="px-4 py-3 border-b border-black/5">
+            <h3 className="font-semibold">Current list</h3>
+            <p className="text-sm text-[hsl(var(--muted))]">
+              {total} total • {done} done
+            </p>
+          </header>
+
+          <ul className="divide-y divide-black/5">
+            {items.map((it) => (
+              <li key={it.id} className="px-4 py-3">
+                <label className="flex items-center gap-3">
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded-md accent-[hsl(var(--accent))]"
+                    checked={it.done}
+                    onChange={() => toggleItem(it.id)}
+                    aria-label={`Mark ${it.name} as ${it.done ? "not done" : "done"}`}
+                  />
+
+                  {/* Name + Qty */}
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className={`font-medium truncate ${
+                        it.done ? "line-through text-black/40" : ""
+                      }`}
+                    >
+                      {it.name}
+                    </div>
+                    {it.qty && (
+                      <div className="text-sm text-[hsl(var(--muted))]">{it.qty}</div>
+                    )}
+                  </div>
+
+                  {/* Optional category chip (hidden for now if not set) */}
+                  {it.category && <span className="chip">{it.category}</span>}
+                </label>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* Feature tiles */}
+        {/* Feature tiles (placeholder) */}
         <section className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             { icon: "⚡", title: "Fast input", desc: "Add multiple items quickly." },
@@ -96,7 +126,9 @@ export default function App() {
             { icon: "📶", title: "Offline later", desc: "PWA planned." },
           ].map((f) => (
             <div key={f.title} className="card p-4">
-              <div className="text-xl" aria-hidden>{f.icon}</div>
+              <div className="text-xl" aria-hidden>
+                {f.icon}
+              </div>
               <h4 className="mt-1 font-semibold">{f.title}</h4>
               <p className="text-sm text-[hsl(var(--muted))]">{f.desc}</p>
             </div>
@@ -104,7 +136,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* Floating Action Button (primary mobile action) */}
+      {/* Floating Action Button (placeholder for Add item) */}
       <button
         type="button"
         className="fab"
