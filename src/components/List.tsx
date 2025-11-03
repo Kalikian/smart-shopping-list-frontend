@@ -7,7 +7,9 @@ import ListItem, { type Item, type Category } from "./ListItem";
 // Neutral gray fallback: uses --cat-neutral if defined, else medium gray.
 const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
 
+// Map each category to its color token; include "Default" -> neutral.
 const CATEGORY_COLORS: Record<Category, string> = {
+  Default: NEUTRAL,
   Produce: `hsl(var(--cat-produce))`,
   Dairy: `hsl(var(--cat-dairy))`,
   "Meat & Fish": `hsl(var(--cat-meat))`,
@@ -19,12 +21,10 @@ const CATEGORY_COLORS: Record<Category, string> = {
   "Household & Care": `hsl(var(--cat-household))`,
 };
 
-// ONE-ARG function now: item -> color (or neutral)
+// Returns per-item color (Default/undefined -> neutral)
 function colorForItem(item: Item): string {
-  if (item.category && CATEGORY_COLORS[item.category]) {
-    return CATEGORY_COLORS[item.category];
-  }
-  return NEUTRAL;
+  const cat: Category = item.category ?? "Default";
+  return CATEGORY_COLORS[cat] ?? NEUTRAL;
 }
 
 type ListProps = {

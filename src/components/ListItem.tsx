@@ -2,6 +2,7 @@
 // Shows colored left bar; checkbox accent matches row color.
 
 export type Category =
+  | "Default"
   | "Produce"
   | "Dairy"
   | "Meat & Fish"
@@ -18,18 +19,19 @@ export type Item = {
   done: boolean;
   amount?: number;   // e.g. 6
   unit?: string;     // "pcs" | "kg" | "g" | "L" | "ml" | "pack" ...
-  category?: Category;
+  category?: Category; // may be undefined -> treated as "Default" in UI
 };
 
 type ListItemProps = {
   item: Item;
   onToggle: (id: string) => void;
   onChange: (patch: Partial<Item>) => void;
-  color: string; // e.g. 'hsl(var(--cat-produce))'
+  color: string; // e.g. 'hsl(var(--cat-produce))' or neutral for Default
 };
 
-// Narrow the select options to Category literals
+// Options shown in the category <select>
 export const CATEGORIES = [
+  "Default",          // ✅ put first for clarity
   "Produce",
   "Dairy",
   "Meat & Fish",
@@ -45,6 +47,8 @@ const UNITS = ["pcs", "kg", "g", "L", "ml", "pack"] as const;
 
 export default function ListItem({ item, onToggle, onChange, color }: ListItemProps) {
   const step = item.unit === "kg" || item.unit === "L" ? 0.1 : 1;
+
+  const categoryLabel: Category = item.category ?? "Default";
 
   return (
     <li className="p-2">
@@ -62,7 +66,7 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
           style={{ accentColor: color }}
         />
 
-        {/* Name */}
+        {/* Name + inline controls */}
         <div className="min-w-0 flex-1 py-3">
           <div className={`font-medium truncate ${item.done ? "line-through text-black/45" : ""}`}>
             {item.name}
@@ -104,14 +108,12 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
             {/* category */}
             <select
               className="rounded-md border border-black/10 px-2 py-1"
-              value={item.category ?? ""}
+              value={categoryLabel} // ✅ treat undefined as "Default"
               onChange={(e) => {
-                // Narrow string to Category | undefined
-                const val = (e.target.value || undefined) as Category | undefined;
+                const val = e.target.value as Category;
                 onChange({ category: val });
               }}
             >
-              <option value="">Category</option>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -121,18 +123,13 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
           </div>
         </div>
 
-        {/* Visual category chip */}
-        {item.category && (
-          <span
-            className="chip mr-3 mb-3 sm:mb-0"
-            style={{
-              backgroundColor: `${color} / 0.12`,
-              borderColor: `${color} / 0.35`,
-            }}
-          >
-            {item.category}
-          </span>
-        )}
+        {/* Visual category chip (always show, label reflects Default) */}
+        <span
+          className="mr-3 mb-3 sm:mb-0 text-sm font-medium"
+          style={{ color }}
+        >
+          {categoryLabel}
+        </span>
       </div>
     </li>
   );
