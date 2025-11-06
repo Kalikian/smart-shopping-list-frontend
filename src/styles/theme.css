@@ -25,14 +25,14 @@
 
   /* Category hues */
   --cat-produce: 145 62% 40%;
-  --cat-dairy: 220 70% 50%;
+  --cat-dairy: 48 92% 72%;
   --cat-meat: 355 70% 50%;
-  --cat-bakery: 28 90% 55%;
-  --cat-pantry: 35 85% 45%;
-  --cat-beverages: 188 72% 45%;
-  --cat-frozen: 200 80% 50%;
+  --cat-bakery: 38 100% 54%;
+  --cat-pantry: 24 85% 46%;
+  --cat-beverages: 268 85% 56%;
+  --cat-frozen: 205 88% 62%;
   --cat-snacks: 330 65% 55%;
-  --cat-household: 265 55% 55%;
+  --cat-household: 30 12% 46%;
   --cat-neutral: 0 0% 55%;
 }
 
