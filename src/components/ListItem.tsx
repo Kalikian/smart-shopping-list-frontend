@@ -85,7 +85,6 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
         style={{
           backgroundColor: bgTint,
           borderColor: brdTint,
-          // WICHTIG: bei Default KEIN Balken-Schatten, sonst bleibt alter Wert erhalten
           boxShadow: isDefault ? softDrop : `${barShadow}, ${softDrop}`,
         }}
       >

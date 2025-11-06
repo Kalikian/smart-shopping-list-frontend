@@ -1,149 +1,74 @@
-import { useMemo } from "react";
+// src/components/CategoryBadge.tsx
 import { CATEGORY_ICON_BY_LABEL, type CategoryLabel } from "../constants/categories";
 
-// Item row with inline editing for amount, unit, category.
-// Shows colored left bar; checkbox accent matches row color.
-
-export type Category = CategoryLabel;
-
-export type Item = {
-  id: string;
-  name: string;
-  done: boolean;
-  amount?: number;
-  unit?: string;
-  category?: Category; // undefined -> "Default"
+type Props = {
+  /** Category label, e.g. "Produce" or "Default" */
+  category?: CategoryLabel;
+  /** Base category color used to tint the badge background and ring (e.g. 'hsl(var(--cat-produce))') */
+  color?: string;
+  /** Circular badge size in px */
+  size?: number;
+  /** Optionally render the text label next to the icon */
+  showLabel?: boolean;
 };
 
-type ListItemProps = {
-  item: Item;
-  onToggle: (id: string) => void;
-  onChange: (patch: Partial<Item>) => void;
-  color: string; // e.g. 'hsl(var(--cat-meat))'
-};
+/** Create a translucent tint from various color formats */
+function alphaTint(input?: string, alpha = 0.18): string {
+  if (!input) return "rgba(0,0,0,0.06)";
+  const a = Math.max(0, Math.min(1, alpha));
 
-export const CATEGORIES = [
-  "Default",
-  "Produce",
-  "Dairy",
-  "Meat & Fish",
-  "Bakery",
-  "Pantry (Dry)",
-  "Beverages",
-  "Frozen",
-  "Snacks & Sweets",
-  "Household & Care",
-] as const satisfies readonly Category[];
+  // hsl(...) → append slash alpha
+  if (input.startsWith("hsl(")) return input.replace(/\)$/, ` / ${a})`);
 
-const UNITS = ["pcs", "kg", "g", "L", "ml", "pack"] as const;
+  // rgb(...) → convert to rgba(...)
+  if (input.startsWith("rgb(")) return input.replace(/^rgb\(/, "rgba(").replace(/\)$/, `, ${a})`);
 
-// helper: aus "hsl(var(--cat-x))" -> "hsl(var(--cat-x) / 0.14)"
-function alphaTint(hslOrVar: string, alpha = 0.14): string {
-  // gängige Fälle: "hsl(var(--...))" oder "hsl(...)" -> mit Slash-Alpha erweitern
-  if (hslOrVar.startsWith("hsl(") && hslOrVar.endsWith(")")) {
-    return hslOrVar.replace(/\)$/, ` / ${alpha})`);
+  // #rrggbb or #rgb → convert to rgba(r,g,b,a)
+  if (input.startsWith("#")) {
+    const hex = input.slice(1);
+    const norm = hex.length === 3 ? hex.split("").map(c => c + c).join("") : hex;
+    const r = parseInt(norm.slice(0, 2), 16);
+    const g = parseInt(norm.slice(2, 4), 16);
+    const b = parseInt(norm.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
   }
-  // Fallback leichte neutrale Tönung
+
+  // var(--token) → wrap as hsl(var(--token) / a)
+  if (input.startsWith("var(")) return `hsl(${input} / ${a})`;
+
+  // Fallback neutral tint
   return "rgba(0,0,0,0.06)";
 }
 
-export default function ListItem({ item, onToggle, onChange, color }: ListItemProps) {
-  const step = item.unit === "kg" || item.unit === "L" ? 0.1 : 1;
+export default function CategoryBadge({
+  category = "Default",
+  color,
+  size = 32,
+  showLabel = false,
+}: Props) {
+  const isDefault = category === "Default";
+  const iconSrc = CATEGORY_ICON_BY_LABEL[category];
 
-  const categoryLabel: Category = item.category ?? "Default";
-  const iconSrc = CATEGORY_ICON_BY_LABEL[categoryLabel];
-  const badgeBg = useMemo(() => alphaTint(color, 0.14), [color]);
+  // Default stays colorless (white); others are softly tinted
+  const bg = isDefault ? "#ffffff" : alphaTint(color, 0.18);
+  const ring = isDefault
+    ? "0 0 0 1px rgba(0,0,0,0.12) inset"
+    : `0 0 0 1px ${alphaTint(color, 0.35)} inset`;
 
   return (
-    <li className="p-2">
-      <div
-        className="relative flex flex-wrap items-center gap-3 rounded-xl border border-black/10 bg-white/60 shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-black/10"
-        style={{ boxShadow: `inset 4px 0 0 0 ${color}` }}
+    <div className="inline-flex items-center gap-2" title={category} aria-label={category}>
+      <span
+        className="inline-flex items-center justify-center rounded-full"
+        style={{ width: size, height: size, backgroundColor: bg, boxShadow: ring }}
       >
-        {/* Checkbox */}
-        <input
-          type="checkbox"
-          className="ml-3 mr-1 h-5 w-5 rounded-md"
-          checked={item.done}
-          onChange={() => onToggle(item.id)}
-          aria-label={`Mark ${item.name} as ${item.done ? "not done" : "done"}`}
-          style={{ accentColor: color }}
-        />
-
-        {/* Name + inline controls */}
-        <div className="min-w-0 flex-1 py-3">
-          <div className={`font-medium truncate ${item.done ? "line-through text-black/45" : ""}`}>
-            {item.name}
-          </div>
-
-          {/* Inline controls: amount + unit + category */}
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            {/* amount */}
-            <label className="flex items-center gap-1">
-              <span className="text-[hsl(var(--muted))]">Qty</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step={step}
-                min={0}
-                className="w-20 rounded-md border border-black/10 px-2 py-1"
-                value={item.amount ?? ""}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  onChange({ amount: raw === "" ? undefined : Number(raw) });
-                }}
-              />
-            </label>
-
-            {/* unit */}
-            <select
-              className="rounded-md border border-black/10 px-2 py-1"
-              value={item.unit ?? ""}
-              onChange={(e) => onChange({ unit: e.target.value || undefined })}
-            >
-              <option value="">Unit</option>
-              {UNITS.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-
-            {/* category */}
-            <select
-              className="rounded-md border border-black/10 px-2 py-1"
-              value={categoryLabel}
-              onChange={(e) => onChange({ category: e.target.value as Category })}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Right: category icon badge with tinted background */}
-        <div className="mr-3 mb-3 sm:mb-0 flex items-center" title={categoryLabel} aria-label={categoryLabel}>
-          <span
-            className="inline-flex items-center justify-center rounded-full ring-1 ring-black/5"
-            style={{ width: 28, height: 28, backgroundColor: badgeBg }}
-          >
-            {iconSrc ? (
-              <img
-                src={iconSrc}
-                alt=""
-                className="w-[60%] h-[60%] object-contain"
-                draggable={false}
-              />
-            ) : (
-              <span className="text-xs text-gray-500">?</span>
-            )}
-          </span>
-          <span className="sr-only">{categoryLabel}</span>
-        </div>
-      </div>
-    </li>
+        {iconSrc ? (
+          <img src={iconSrc} alt="" className="w-[60%] h-[60%] object-contain" draggable={false} />
+        ) : (
+          <span className="text-xs text-gray-500">?</span>
+        )}
+      </span>
+      {showLabel && <span className="text-sm font-medium">{category}</span>}
+      <span className="sr-only">{category}</span>
+    </div>
   );
 }
