@@ -1,3 +1,5 @@
+// src/constants/categories.ts
+
 // --- category label union ---
 export type CategoryLabel =
     | "Default"
@@ -33,5 +35,30 @@ export const CATEGORY_ICON_BY_LABEL: Record<CategoryLabel, string | null> = {
     Beverages: beveragesPng,
     Frozen: frozenPng,
     "Snacks & Sweets": snacksPng,
-    "Household & Care": housholdPng
+    "Household & Care": housholdPng,
 };
+
+// --- NEW: central lists for UI ---
+
+/** Default category used when none selected */
+export const CATEGORY_DEFAULT: CategoryLabel = "Default";
+
+/** Ordered list of categories for selects & validation */
+export const CATEGORIES = [
+    "Default",
+    "Produce",
+    "Dairy",
+    "Meat & Fish",
+    "Bakery",
+    "Pantry (Dry)",
+    "Beverages",
+    "Frozen",
+    "Snacks & Sweets",
+    "Household & Care",
+] as const satisfies readonly CategoryLabel[];
+
+/** Supported units for amounts */
+export const UNITS = ["pcs", "kg", "g", "L", "mL", "pack"] as const;
+
+/** Unit type derived from UNITS */
+export type Unit = (typeof UNITS)[number];
