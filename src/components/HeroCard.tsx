@@ -2,11 +2,6 @@
 import { useState } from "react";
 import Button from "./ui/Button";
 
-/**
- * Props for the hero card.
- * onCreateNew/onOpenExisting are optional so this component stays flexible.
- * You can pass async functions; loading state is handled locally.
- */
 type HeroCardProps = {
   onCreateNew?: () => Promise<void> | void;
   onOpenExisting?: () => Promise<void> | void;
@@ -22,7 +17,6 @@ export default function HeroCard({
 }: HeroCardProps) {
   const [creating, setCreating] = useState(false);
 
-  // Handle "Create new list" with built-in loading state
   const handleCreate = async () => {
     if (creating) return;
     try {
@@ -33,24 +27,22 @@ export default function HeroCard({
     }
   };
 
-  // "Open existing" stays enabled unless create is loading
   const handleOpen = async () => {
     await onOpenExisting?.();
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      {/* Tiny label */}
-      <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-        <span className="inline-block h-2 w-2 rounded-full bg-emerald-600" />
+    <section className="rounded-2xl border border-[hsl(var(--border))] bg-white p-6 shadow-sm">
+      {/* Theme-aware badge */}
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold
+                      bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))]">
+        <span className="inline-block h-2 w-2 rounded-full bg-[hsl(var(--accent))]" />
         Quick &amp; simple
       </div>
 
-      {/* Headline */}
-      <h2 className="mb-3 text-2xl font-bold text-slate-900">{title}</h2>
+      <h2 className="mb-3 text-2xl font-bold text-[hsl(var(--text))]">{title}</h2>
       <p className="mb-6 max-w-prose text-slate-600">{subtitle}</p>
 
-      {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button
           variant="primary"

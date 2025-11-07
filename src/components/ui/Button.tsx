@@ -7,20 +7,16 @@ type ButtonProps = {
   loading?: boolean;
   disabled?: boolean;
   variant?: "primary" | "ghost";
-  /** Size affects padding & font */
   size?: "sm" | "md" | "lg";
-  /** If true, takes full width of its container (e.g., mobile stack) */
   fluid?: boolean;
-  /** Extra classes to fine-tune layout (optional) */
   className?: string;
   type?: "button" | "submit";
 };
 
 /**
- * Responsive, accessible button:
- * - Keeps width stable while loading (no layout shift)
- * - Responsive min-widths so it doesn’t look tiny on desktop or huge on mobile
- * - Optional fluid mode for full-width buttons
+ * Theme-aware, responsive button with spinner.
+ * Uses tokens from styles/theme.css:
+ *   --accent, --on-accent, --text, --border
  */
 export default function Button({
   children,
@@ -44,18 +40,20 @@ export default function Button({
     lg: "text-base px-5 py-3.5",
   } as const;
 
+  // Theme-aware variants via CSS variables
   const variants = {
     primary:
-      "bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:ring-emerald-600 disabled:bg-emerald-400",
+      "bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] " +
+      "hover:brightness-95 focus-visible:ring-[hsl(var(--accent))] " +
+      "disabled:opacity-60 disabled:cursor-not-allowed",
     ghost:
-      "bg-white text-slate-900 border border-slate-300 hover:bg-slate-50 focus-visible:ring-slate-400 disabled:text-slate-400",
+      "bg-white text-[hsl(var(--text))] border border-[hsl(var(--border))] " +
+      "hover:bg-slate-50 focus-visible:ring-[hsl(var(--accent))] " +
+      // behalten: beim Disable wird Text grau
+      "disabled:text-slate-400 disabled:cursor-not-allowed",
   } as const;
 
-  // Fixed, responsive min-width to avoid jumping text on load
-  // (≈144px mobile, 160px md, 176px lg)
-  const fixedWidth = fluid
-    ? "w-full"
-    : "min-w-36 md:min-w-40 lg:min-w-44";
+  const fixedWidth = fluid ? "w-full" : "min-w-36 md:min-w-40 lg:min-w-44";
 
   return (
     <button
@@ -73,27 +71,9 @@ export default function Button({
       ].join(" ")}
     >
       {loading && (
-        <svg
-          className="h-4 w-4 animate-spin"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-            fill="none"
-            opacity="0.25"
-          />
-          <path
-            d="M22 12a10 10 0 0 0-10-10"
-            stroke="currentColor"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
+        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25" />
+          <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" />
         </svg>
       )}
       <span className="whitespace-nowrap">{children}</span>

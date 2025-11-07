@@ -1,7 +1,8 @@
+// src/App.tsx
 // Orchestrates UI: header counters, local demo state, and handlers.
 // Uses structured fields: amount (number), unit (string), category (Category).
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import AppHeader from "./components/AppHeader";
 import HeroCard from "./components/HeroCard";
 import FeatureTiles from "./components/FeatureTiles";
@@ -10,16 +11,19 @@ import Fab from "./components/Fab";
 import type { Item } from "./components/ListItem";
 import ThemeSwitcher from "./components/ThemeSwitcher";
 
+// tiny helper just to show the hero button spinner for a moment
+function sleep(ms: number) {
+  return new Promise((res) => setTimeout(res, ms));
+}
+
 export default function App() {
   // Demo data (EN categories)
   const [items, setItems] = useState<Item[]>([
-    { id: "i1", name: "Bananas",   amount: 6, unit: "pcs",  category: "Produce",        done: false },
-    { id: "i2", name: "Pasta",     amount: 2, unit: "pack", category: "Pantry (Dry)",    done: true  },
-    { id: "i3", name: "Milk",      amount: 2, unit: "L",    category: "Dairy",           done: false },
-    { id: "i4", name: "Olive oil", amount: 1, unit: "L",    category: "Pantry (Dry)",    done: true  },
+    { id: "i1", name: "Bananas",   amount: 6, unit: "pcs",  category: "Produce",      done: false },
+    { id: "i2", name: "Pasta",     amount: 2, unit: "pack", category: "Pantry (Dry)", done: true  },
+    { id: "i3", name: "Milk",      amount: 2, unit: "L",    category: "Dairy",        done: false },
+    { id: "i4", name: "Olive oil", amount: 1, unit: "L",    category: "Pantry (Dry)", done: true  },
   ]);
-
-  const [creating, setCreating] = useState(false);
 
   // Header counters
   const { total, open } = useMemo(() => {
@@ -36,11 +40,17 @@ export default function App() {
   const updateItem = (id: string, patch: Partial<Item>) =>
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
 
-  // Fake "create list" loader
-  const handleCreateList = () => {
-    setCreating(true);
-    setTimeout(() => setCreating(false), 700);
-  };
+  // Handlers for the HeroCard
+  const handleCreateList = useCallback(async () => {
+    // later: create a new list (local or via backend) and navigate/show it
+    await sleep(900); // just to show spinner
+    console.log("New list created (demo).");
+  }, []);
+
+  const handleOpenExisting = useCallback(async () => {
+    // later: open a modal or navigate to /lists
+    console.log("Open existing (demo).");
+  }, []);
 
   return (
     <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
@@ -52,7 +62,10 @@ export default function App() {
       </div>
 
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
-        <HeroCard creating={creating} onCreate={handleCreateList} />
+        <HeroCard
+          onCreateNew={handleCreateList}
+          onOpenExisting={handleOpenExisting}
+        />
         <List items={items} onToggle={toggleItem} onChange={updateItem} />
         <FeatureTiles />
       </main>
