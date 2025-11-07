@@ -1,14 +1,16 @@
+// src/components/List.tsx
 // List section showing header with counters + items and visible card border.
 // Maps category -> fixed brand colors (CSS variables).
 // If no category is chosen, use a neutral gray (CSS var with fallback).
 
-import ListItem, { type Item, type Category } from "./ListItem";
+import ListItem, { type Item } from "./ListItem";
+import type { CategoryLabel } from "../constants/categories";
 
 // Neutral gray fallback: uses --cat-neutral if defined, else medium gray.
 const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
 
 // Map each category to its color token; include "Default" -> neutral.
-const CATEGORY_COLORS: Record<Category, string> = {
+const CATEGORY_COLORS: Record<CategoryLabel, string> = {
   Default: NEUTRAL,
   Produce: `hsl(var(--cat-produce))`,
   Dairy: `hsl(var(--cat-dairy))`,
@@ -23,7 +25,7 @@ const CATEGORY_COLORS: Record<Category, string> = {
 
 // Returns per-item color (Default/undefined -> neutral)
 function colorForItem(item: Item): string {
-  const cat: Category = item.category ?? "Default";
+  const cat: CategoryLabel = item.category ?? "Default";
   return CATEGORY_COLORS[cat] ?? NEUTRAL;
 }
 

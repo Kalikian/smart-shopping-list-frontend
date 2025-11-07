@@ -1,16 +1,21 @@
+// src/components/ListItem.tsx
 import { useMemo } from "react";
-import { CATEGORY_ICON_BY_LABEL, type CategoryLabel } from "../constants/categories";
+import {
+  CATEGORY_ICON_BY_LABEL,
+  CATEGORIES,
+  UNITS,
+  type CategoryLabel,
+  type Unit,
+} from "../constants/categories";
 
-// Types
-export type Category = CategoryLabel;
-
+// Item type for the app's shopping list entries
 export type Item = {
   id: string;
   name: string;
   done: boolean;
   amount?: number;
-  unit?: string;
-  category?: Category; // undefined -> "Default"
+  unit?: Unit;
+  category?: CategoryLabel; // undefined -> "Default"
 };
 
 type ListItemProps = {
@@ -21,21 +26,6 @@ type ListItemProps = {
   color: string;
 };
 
-export const CATEGORIES = [
-  "Default",
-  "Produce",
-  "Dairy",
-  "Meat & Fish",
-  "Bakery",
-  "Pantry (Dry)",
-  "Beverages",
-  "Frozen",
-  "Snacks & Sweets",
-  "Household & Care",
-] as const satisfies readonly Category[];
-
-const UNITS = ["pcs", "kg", "g", "L", "ml", "pack"] as const;
-
 /** Create a translucent tint from various color formats */
 function alphaTint(input: string, alpha = 0.12): string {
   const a = Math.max(0, Math.min(1, alpha));
@@ -43,7 +33,7 @@ function alphaTint(input: string, alpha = 0.12): string {
   if (input.startsWith("rgb(")) return input.replace(/^rgb\(/, "rgba(").replace(/\)$/, `, ${a})`);
   if (input.startsWith("#")) {
     const hex = input.slice(1);
-    const norm = hex.length === 3 ? hex.split("").map(c => c + c).join("") : hex;
+    const norm = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
     const r = parseInt(norm.slice(0, 2), 16);
     const g = parseInt(norm.slice(2, 4), 16);
     const b = parseInt(norm.slice(4, 6), 16);
@@ -56,16 +46,16 @@ function alphaTint(input: string, alpha = 0.12): string {
 export default function ListItem({ item, onToggle, onChange, color }: ListItemProps) {
   const step = item.unit === "kg" || item.unit === "L" ? 0.1 : 1;
 
-  const categoryLabel: Category = item.category ?? "Default";
+  const categoryLabel: CategoryLabel = item.category ?? "Default";
   const iconSrc = CATEGORY_ICON_BY_LABEL[categoryLabel];
   const isDefault = categoryLabel === "Default";
 
-  // Verwende bei Default gar keine Kategorie-Farbe
+  // No tint for Default category
   const effectiveColor = isDefault ? undefined : color;
 
   // Tints / Styles
-  const bgTint  = useMemo(
-    () => (isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.10)),
+  const bgTint = useMemo(
+    () => (isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.1)),
     [effectiveColor, isDefault]
   );
   const brdTint = useMemo(
@@ -125,21 +115,25 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
             <select
               className="h-9 rounded-md border border-black/10 px-2"
               value={item.unit ?? ""}
-              onChange={(e) => onChange({ unit: e.target.value || undefined })}
+              onChange={(e) => onChange({ unit: (e.target.value || undefined) as Unit | undefined })}
             >
               <option value="">Unit</option>
               {UNITS.map((u) => (
-                <option key={u} value={u}>{u}</option>
+                <option key={u} value={u}>
+                  {u}
+                </option>
               ))}
             </select>
 
             <select
               className="h-9 rounded-md border border-black/10 px-2"
               value={categoryLabel}
-              onChange={(e) => onChange({ category: e.target.value as Category })}
+              onChange={(e) => onChange({ category: e.target.value as CategoryLabel })}
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
