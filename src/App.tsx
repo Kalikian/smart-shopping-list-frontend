@@ -1,167 +1,219 @@
 // src/App.tsx
-// Parent wiring for named lists (offline-first) + minimal picker UI.
-// - Integrates NewListDialog (create & select lists)
-// - Loads current snapshot at boot, keeps legacy flows intact
-// - Adds online-event listener to flush pending ops to backend (stub sender)
-// - All comments in English, per project convention
+// Orchestrates UI + offline-first data access via listStore.
+// Inline create uses theme colors; list renders only after user names it.
 
-import { useEffect, useMemo, useState } from "react";
-import NewListDialog from "./components/NewListDialog";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import AppHeader from "./components/AppHeader";
+import HeroCard from "./components/HeroCard";
+import FeatureTiles from "./components/FeatureTiles";
+import List from "./components/List";
+import Fab from "./components/Fab";
+import ThemeSwitcher from "./components/ThemeSwitcher";
+import type { Item } from "./components/ListItem";
+
 import {
-  // legacy-compatible snapshot helpers
   loadSnapshot,
-  // new multi-list helpers
-  getAllLists,
-  selectList,
-  createAndSelectList,
-  // sync
-  flushPendingOps,
+  saveSnapshot,
+  createNewList,
+  createAndSelectList, // exists in your store
+  toggleItem,
+  updateItem,
+  addItem as addItemStore,
+  removeItem as removeItemStore,
+  type ListSnapshot,
 } from "./data/listStore";
 
-// Types local to this file to avoid leaking broader app details
-type ListMeta = {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type ListSnapshot = {
-  id: string;
-  name?: string;
-  createdAt: string;
-  updatedAt?: string;
-  items: Array<{
-    id: string;
-    title: string;
-    qty: number;
-    unit?: string;
-    category?: string;
-    done?: boolean;
-  }>;
-};
+function newItemId() {
+  return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
 
 export default function App() {
-  // Current list snapshot used across the app
-  const [snap, setSnap] = useState<ListSnapshot | null>(null);
-  // Lists index to populate the picker
-  const [lists, setLists] = useState<ListMeta[]>([]);
-  // UI: new-list dialog
-  const [isNewOpen, setNewOpen] = useState(false);
+  // Load snapshot if one exists; do NOT auto-create.
+  const [list, setList] = useState<ListSnapshot | null>(loadSnapshot());
 
-  // Derived: current list name
-  const currentName = useMemo(() => snap?.name ?? "My list", [snap]);
+  // Inline-create UI state
+  const [isInlineCreateOpen, setInlineCreateOpen] = useState(false);
+  const [newListName, setNewListName] = useState("");
 
-  // --- Boot: load current list + index
+  // Persist defensively on changes (if a list exists)
   useEffect(() => {
-    // Load snapshot (migrates legacy storage inside listStore if needed)
-    setSnap(loadSnapshot());
-    // Load index
-    setLists(getAllLists());
+    if (list) saveSnapshot(list);
+  }, [list]);
+
+  // Header counters
+  const { total, open } = useMemo(() => {
+    const items = list?.items ?? [];
+    const total = items.length;
+    const done = items.filter((i) => i.done).length;
+    return { total, open: total - done };
+  }, [list]);
+
+  // Mutations (no-ops if list doesn't exist yet)
+  const handleToggle = useCallback(
+    (id: string) => {
+      if (!list) return;
+      const snap = toggleItem(id);
+      setList(snap);
+    },
+    [list]
+  );
+
+  const handlePatch = useCallback(
+    (id: string, patch: Partial<Item>) => {
+      if (!list) return;
+      const snap = updateItem(id, patch);
+      setList(snap);
+    },
+    [list]
+  );
+
+  const handleAdd = useCallback(
+    (draft: Omit<Item, "id">) => {
+      if (!list) return;
+      const item: Item = { id: newItemId(), ...draft };
+      const snap = addItemStore(item);
+      setList(snap);
+    },
+    [list]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (!list) return;
+      const snap = removeItemStore(id);
+      setList(snap);
+    },
+    [list]
+  );
+
+  // Hero actions
+  const handleCreateNew = useCallback(() => {
+    // Open inline name panel right under hero; no scrolling.
+    setInlineCreateOpen(true);
   }, []);
 
-  // --- Sync: flush pending ops on start and when the app comes online
-  useEffect(() => {
-    // Replace this with a real API call later
-    const sender = async (_op: unknown) => {
-      // TODO: implement POST to your backend (idempotent upsert by listId)
-      // Intentionally empty for now (acts as successful no-op)
-      return;
-    };
+  const handleConfirmCreate = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault();
+      const trimmed = newListName.trim();
+      if (trimmed.length < 3) return;
 
-    const tryFlush = () => {
-      // Fire-and-forget; errors are surfaced via unhandled rejections in dev
-      void flushPendingOps(sender);
-    };
+      // Create a new empty list with a name and select it
+      let created: ListSnapshot;
+      if (typeof createAndSelectList === "function") {
+        created = createAndSelectList(trimmed);
+      } else {
+        // Fallback (should not be hit in your current store)
+        const snap = createNewList();
+        created = { ...snap, name: trimmed };
+        saveSnapshot(created);
+      }
 
-    // Try once at startup if online
-    if (typeof navigator === "undefined" || navigator.onLine) {
-      tryFlush();
-    }
+      setList(created);              // show empty list now
+      setNewListName("");
+      setInlineCreateOpen(false);
+    },
+    [newListName]
+  );
 
-    // Register online listener
-    const onOnline = () => tryFlush();
-    window.addEventListener("online", onOnline);
-    return () => window.removeEventListener("online", onOnline);
+  const handleCancelCreate = useCallback(() => {
+    setNewListName("");
+    setInlineCreateOpen(false);
   }, []);
 
-  // --- Handlers ---
-  const handleCreate = (name: string) => {
-    const created = createAndSelectList(name);
-    setSnap(created);
-    setLists(getAllLists());
-    setNewOpen(false);
-  };
+  const handleOpenExisting = useCallback(() => {
+    // Placeholder for future picker
+  }, []);
 
-  const handleSelect = (id: string) => {
-    const selected = selectList(id);
-    if (selected) {
-      setSnap(selected);
-    }
-    // Keep index fresh (updatedAt might change on selection/rename later)
-    setLists(getAllLists());
-  };
+  const currentListName = list?.name?.trim() || "My list";
 
-  // --- Minimal UI shell for list management (non-intrusive) ---
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      {/* Top bar */}
-      <header className="safe-x sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-screen-sm items-center justify-between gap-3 py-3">
-          <div className="flex min-w-0 items-baseline gap-2">
-            <h1 className="truncate text-lg font-semibold">Smart Shopping List</h1>
-            <span className="truncate text-sm text-neutral-500">— {currentName}</span>
-          </div>
+    <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
+      <AppHeader open={open} total={total} />
 
-          <div className="flex items-center gap-2">
-            {/* Existing lists picker */}
-            <select
-              className="rounded-xl border border-neutral-300 px-3 py-2 text-sm"
-              value={snap?.id ?? ""}
-              onChange={(e) => handleSelect(e.target.value)}
-            >
-              <option value="" disabled>
-                Select list…
-              </option>
-              {lists.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+      <div className="mx-auto max-w-screen-sm safe-x">
+        <ThemeSwitcher />
+      </div>
 
-            {/* New list button */}
-            <button
-              onClick={() => setNewOpen(true)}
-              className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-medium text-white"
-            >
-              New list
-            </button>
-          </div>
-        </div>
-      </header>
+      <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
+        <HeroCard onCreateNew={handleCreateNew} onOpenExisting={handleOpenExisting} />
 
-      {/* Main content placeholder */}
-      <main className="safe-x mx-auto max-w-screen-sm py-4">
-        {/* Here your existing components render, using `snap` as the current list.
-           Example (pseudo):
-           <List items={snap?.items ?? []} onChange={...} />
-        */}
-        <div className="rounded-2xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-600">
-          Current list ID: <strong>{snap?.id ?? "—"}</strong>
-          <br />
-          Items: <strong>{snap?.items?.length ?? 0}</strong>
-          <br />
-          Created: <strong>{snap?.createdAt ?? "—"}</strong>
-        </div>
+        {/* Inline create panel (right under hero, theme-colored) */}
+        {isInlineCreateOpen && (
+          <form
+            onSubmit={handleConfirmCreate}
+            className="mt-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--panel))] p-4 shadow-sm"
+          >
+            <div className="flex items-end gap-3 max-sm:flex-col max-sm:items-stretch">
+              <div className="grow">
+                <label htmlFor="inline-list-name" className="block text-sm font-medium">
+                  List name
+                </label>
+                <input
+                  id="inline-list-name"
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  placeholder="e.g., Lidl, Weekly Groceries, Party Prep"
+                  className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
+                  minLength={3}
+                  maxLength={60}
+                  autoComplete="off"
+                />
+                <p className="mt-1 text-xs opacity-70">
+                  Tip: choose a clear, memorable name.
+                </p>
+              </div>
+
+              <div className="flex gap-2 max-sm:justify-end">
+                <button
+                  type="button"
+                  onClick={handleCancelCreate}
+                  className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--panel))] px-4 py-2 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={newListName.trim().length < 3}
+                  className="rounded-xl bg-[hsl(var(--accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* Render list ONLY if it exists */}
+        {list && (
+          <section id="current-list" className="scroll-mt-20">
+            <div className="mb-2 mt-6 flex items-center justify-between">
+              <h2 className="text-base font-semibold">{currentListName}</h2>
+              <span className="text-sm opacity-70">
+                {open} open · {total} total
+              </span>
+            </div>
+
+            <List
+              items={list.items}
+              onToggle={handleToggle}
+              onChange={handlePatch}
+              onAdd={handleAdd}
+              onDelete={handleDelete}
+            />
+          </section>
+        )}
+
+        <FeatureTiles />
       </main>
 
-      {/* New list dialog */}
-      <NewListDialog
-        isOpen={isNewOpen}
-        onClose={() => setNewOpen(false)}
-        onCreate={handleCreate}
-        existingNames={lists.map((l) => l.name)}
+      <Fab
+        onClick={() => {
+          document
+            .querySelector("#current-list")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
       />
     </div>
   );
