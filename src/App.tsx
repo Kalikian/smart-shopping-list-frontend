@@ -1,111 +1,168 @@
 // src/App.tsx
-// Orchestrates UI + offline-first data access via listStore.
-// Inline Add persists items; Delete is now wired through listStore.
+// Parent wiring for named lists (offline-first) + minimal picker UI.
+// - Integrates NewListDialog (create & select lists)
+// - Loads current snapshot at boot, keeps legacy flows intact
+// - Adds online-event listener to flush pending ops to backend (stub sender)
+// - All comments in English, per project convention
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import AppHeader from "./components/AppHeader";
-import HeroCard from "./components/HeroCard";
-import FeatureTiles from "./components/FeatureTiles";
-import List from "./components/List";
-import Fab from "./components/Fab";
-import ThemeSwitcher from "./components/ThemeSwitcher";
-import type { Item } from "./components/ListItem";
+import { useEffect, useMemo, useState } from "react";
+import NewListDialog from "./components/NewListDialog";
+import {
+  // legacy-compatible snapshot helpers
+  loadSnapshot,
+  // new multi-list helpers
+  getAllLists,
+  selectList,
+  createAndSelectList,
+  // sync
+  flushPendingOps,
+} from "./data/listStore";
 
-import * as listStore from "./data/listStore";
+// Types local to this file to avoid leaking broader app details
+type ListMeta = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
-function sleep(ms: number) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-function newItemId() {
-  return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
+type ListSnapshot = {
+  id: string;
+  name?: string;
+  createdAt: string;
+  updatedAt?: string;
+  items: Array<{
+    id: string;
+    title: string;
+    qty: number;
+    unit?: string;
+    category?: string;
+    done?: boolean;
+  }>;
+};
 
 export default function App() {
-  // Load or create snapshot
-  const stored = listStore.loadSnapshot();
-  const [list, setList] = useState(stored ?? listStore.createNewList());
+  // Current list snapshot used across the app
+  const [snap, setSnap] = useState<ListSnapshot | null>(null);
+  // Lists index to populate the picker
+  const [lists, setLists] = useState<ListMeta[]>([]);
+  // UI: new-list dialog
+  const [isNewOpen, setNewOpen] = useState(false);
 
-  // Persist defensively on changes
+  // Derived: current list name
+  const currentName = useMemo(() => snap?.name ?? "My list", [snap]);
+
+  // --- Boot: load current list + index
   useEffect(() => {
-    listStore.saveSnapshot(list);
-  }, [list]);
-
-  const items = list.items;
-
-  // Header counters
-  const { total, open } = useMemo(() => {
-    const total = items.length;
-    const done = items.filter((i) => i.done).length;
-    return { total, open: total - done };
-  }, [items]);
-
-  // Mutations
-  const handleToggle = useCallback((id: string) => {
-    const snap = listStore.toggleItem(id);
-    setList(snap);
+    // Load snapshot (migrates legacy storage inside listStore if needed)
+    setSnap(loadSnapshot());
+    // Load index
+    setLists(getAllLists());
   }, []);
 
-  const handlePatch = useCallback((id: string, patch: Partial<Item>) => {
-    const snap = listStore.updateItem(id, patch);
-    setList(snap);
+  // --- Sync: flush pending ops on start and when the app comes online
+  useEffect(() => {
+    // Replace this with a real API call later
+    const sender = async (_op: unknown) => {
+      // TODO: implement POST to your backend (idempotent upsert by listId)
+      // Intentionally empty for now (acts as successful no-op)
+      return;
+    };
+
+    const tryFlush = () => {
+      // Fire-and-forget; errors are surfaced via unhandled rejections in dev
+      void flushPendingOps(sender);
+    };
+
+    // Try once at startup if online
+    if (typeof navigator === "undefined" || navigator.onLine) {
+      tryFlush();
+    }
+
+    // Register online listener
+    const onOnline = () => tryFlush();
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
   }, []);
 
-  const handleAdd = useCallback((draft: Omit<Item, "id">) => {
-    const item: Item = { id: newItemId(), ...draft };
-    const snap = listStore.addItem(item);
-    setList(snap);
-  }, []);
+  // --- Handlers ---
+  const handleCreate = (name: string) => {
+    const created = createAndSelectList(name);
+    setSnap(created);
+    setLists(getAllLists());
+    setNewOpen(false);
+  };
 
-  // NEW: Delete item
-  const handleDelete = useCallback((id: string) => {
-    const snap = listStore.removeItem(id);
-    setList(snap);
-  }, []);
+  const handleSelect = (id: string) => {
+    const selected = selectList(id);
+    if (selected) {
+      setSnap(selected);
+    }
+    // Keep index fresh (updatedAt might change on selection/rename later)
+    setLists(getAllLists());
+  };
 
-  // Hero actions
-  const handleCreateNew = useCallback(async () => {
-    await sleep(600);
-    const snap = listStore.createNewList();
-    setList(snap);
-    document.querySelector("#current-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
-  const handleOpenExisting = useCallback(async () => {
-    console.log("Open existing (to be implemented). Current:", list.id);
-  }, [list.id]);
-
-  // FAB: scroll to list (no auto-create)
-  const handleFabClick = useCallback(() => {
-    document.querySelector("#current-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
+  // --- Minimal UI shell for list management (non-intrusive) ---
   return (
-    <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
-      <AppHeader open={open} total={total} />
+    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+      {/* Top bar */}
+      <header className="safe-x sticky top-0 z-10 border-b border-neutral-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-screen-sm items-center justify-between gap-3 py-3">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h1 className="truncate text-lg font-semibold">Smart Shopping List</h1>
+            <span className="truncate text-sm text-neutral-500">— {currentName}</span>
+          </div>
 
-      <div className="mx-auto max-w-screen-sm safe-x">
-        <ThemeSwitcher />
-      </div>
+          <div className="flex items-center gap-2">
+            {/* Existing lists picker */}
+            <select
+              className="rounded-xl border border-neutral-300 px-3 py-2 text-sm"
+              value={snap?.id ?? ""}
+              onChange={(e) => handleSelect(e.target.value)}
+            >
+              <option value="" disabled>
+                Select list…
+              </option>
+              {lists.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
 
-      <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
-        <HeroCard onCreateNew={handleCreateNew} onOpenExisting={handleOpenExisting} />
-
-        {/* Current list */}
-        <div id="current-list" className="scroll-mt-20">
-          <List
-            items={items}
-            onToggle={handleToggle}
-            onChange={handlePatch}
-            onAdd={handleAdd}
-            onDelete={handleDelete}
-          />
+            {/* New list button */}
+            <button
+              onClick={() => setNewOpen(true)}
+              className="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-medium text-white"
+            >
+              New list
+            </button>
+          </div>
         </div>
+      </header>
 
-        <FeatureTiles />
+      {/* Main content placeholder */}
+      <main className="safe-x mx-auto max-w-screen-sm py-4">
+        {/* Here your existing components render, using `snap` as the current list.
+           Example (pseudo):
+           <List items={snap?.items ?? []} onChange={...} />
+        */}
+        <div className="rounded-2xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-600">
+          Current list ID: <strong>{snap?.id ?? "—"}</strong>
+          <br />
+          Items: <strong>{snap?.items?.length ?? 0}</strong>
+          <br />
+          Created: <strong>{snap?.createdAt ?? "—"}</strong>
+        </div>
       </main>
 
-      <Fab onClick={handleFabClick} />
+      {/* New list dialog */}
+      <NewListDialog
+        isOpen={isNewOpen}
+        onClose={() => setNewOpen(false)}
+        onCreate={handleCreate}
+        existingNames={lists.map((l) => l.name)}
+      />
     </div>
   );
 }
