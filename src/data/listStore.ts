@@ -138,14 +138,15 @@ export function deleteItem(id: string): ListSnapshot {
     return updated;
 }
 
+/** Backwards-compatible alias (App.tsx currently calls removeItem) */
+export const removeItem = deleteItem;
+
 /**
  * Flush pending ops to the backend.
  * Provide a function that knows how to POST each op to your API.
  * If all succeed, the queue is cleared.
  */
-export async function flushPendingOps(
-    sender: (op: PendingOp) => Promise<void>
-): Promise<void> {
+export async function flushPendingOps(sender: (op: PendingOp) => Promise<void>): Promise<void> {
     const ops = loadOps();
     if (!ops.length) return;
 

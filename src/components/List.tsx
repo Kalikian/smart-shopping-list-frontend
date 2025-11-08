@@ -1,10 +1,7 @@
 // src/components/List.tsx
 // List section with header counters, category-based colors, and inline add-composer.
-// - Prop-based API (no store import): parent passes items/onToggle/onChange/onAdd.
-// - Fixes TS errors: no missing hook export, no implicit any, no unknown prop on ListItem.
-// - UI text in English.
-
-// Keep comments in English for maintainability.
+// - Prop-based API (items/onToggle/onChange/onAdd/onDelete)
+// - Forwards optional onDelete to ListItem so a Delete button appears per row.
 
 import ListItem, { type Item } from "./ListItem";
 import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
@@ -39,10 +36,11 @@ type ListProps = {
   onChange: (id: string, patch: Partial<Item>) => void;
   /** Called with a new item draft (without id) created via inline composer */
   onAdd?: (draft: Omit<Item, "id">) => void;
+  /** Optional delete hook; when provided, ListItem shows a Delete button */
+  onDelete?: (id: string) => void;
 };
 
-export default function List({ items, onToggle, onChange, onAdd }: ListProps) {
-  // Counters with explicit typing (avoid implicit any)
+export default function List({ items, onToggle, onChange, onAdd, onDelete }: ListProps) {
   const total: number = items.length;
   const done: number = items.filter((i: Item) => i.done).length;
 
@@ -73,7 +71,7 @@ export default function List({ items, onToggle, onChange, onAdd }: ListProps) {
         </p>
       </header>
 
-      {/* Inline Add Composer (no modal). Shown regardless; submit is a no-op if onAdd is not provided. */}
+      {/* Inline Add Composer */}
       <AddItemInline onSubmit={handleAddSubmit} title="Add item" />
 
       <ul className="divide-y divide-black/5">
@@ -84,7 +82,7 @@ export default function List({ items, onToggle, onChange, onAdd }: ListProps) {
             color={colorForItem(it)}
             onToggle={() => onToggle(it.id)}
             onChange={(patch) => onChange(it.id, patch)}
-            /* Note: no onDelete prop unless ListItem explicitly supports it */
+            onDelete={onDelete ? () => onDelete(it.id) : undefined}
           />
         ))}
       </ul>

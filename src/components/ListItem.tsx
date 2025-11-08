@@ -22,6 +22,8 @@ type ListItemProps = {
   item: Item;
   onToggle: (id: string) => void;
   onChange: (patch: Partial<Item>) => void;
+  /** Optional delete handler; if provided, a Delete button will be shown */
+  onDelete?: (id: string) => void;
   /** category color, e.g. 'hsl(var(--cat-meat))' or '#ff9900' */
   color: string;
 };
@@ -43,7 +45,8 @@ function alphaTint(input: string, alpha = 0.12): string {
   return "rgba(0,0,0,0.06)";
 }
 
-export default function ListItem({ item, onToggle, onChange, color }: ListItemProps) {
+export default function ListItem({ item, onToggle, onChange, onDelete, color }: ListItemProps) {
+  // Dynamic step based on unit: decimals for kg/L, integers otherwise
   const step = item.unit === "kg" || item.unit === "L" ? 0.1 : 1;
 
   const categoryLabel: CategoryLabel = item.category ?? "Default";
@@ -139,8 +142,8 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
           </div>
         </div>
 
-        {/* Right: category icon badge */}
-        <div className="mr-3 mb-3 sm:mb-0 flex items-center" title={categoryLabel} aria-label={categoryLabel}>
+        {/* Right controls: category icon + optional delete */}
+        <div className="mr-3 mb-3 sm:mb-0 flex items-center gap-2" title={categoryLabel} aria-label={categoryLabel}>
           <span
             className="inline-flex items-center justify-center rounded-full"
             style={{
@@ -158,6 +161,20 @@ export default function ListItem({ item, onToggle, onChange, color }: ListItemPr
               <span className="text-xs text-gray-500">?</span>
             )}
           </span>
+
+          {/* Delete button only if parent provided a handler */}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(item.id)}
+              className="rounded-lg border border-[hsl(var(--border))] px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
+              aria-label={`Delete ${item.name}`}
+              title="Delete"
+            >
+              Delete
+            </button>
+          )}
+
           <span className="sr-only">{categoryLabel}</span>
         </div>
       </div>
