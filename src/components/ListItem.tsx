@@ -1,4 +1,9 @@
 // src/components/ListItem.tsx
+// Uniform field labels for clean alignment on small screens.
+// - Each control has a label (Qty, Unit, Category)
+// - XS: stacked fields; SM+: three columns (one row)
+// - Custom +/- stepper (no native spinners)
+
 import { useMemo } from "react";
 import {
   CATEGORY_ICON_BY_LABEL,
@@ -8,27 +13,24 @@ import {
   type Unit,
 } from "../constants/categories";
 
-// Item type for the app's shopping list entries
 export type Item = {
   id: string;
   name: string;
   done: boolean;
   amount?: number;
   unit?: Unit;
-  category?: CategoryLabel; // undefined -> "Default"
+  category?: CategoryLabel;
 };
 
 type ListItemProps = {
   item: Item;
   onToggle: (id: string) => void;
   onChange: (patch: Partial<Item>) => void;
-  /** Optional delete handler; if provided, a Delete button will be shown */
   onDelete?: (id: string) => void;
-  /** category color, e.g. 'hsl(var(--cat-meat))' or '#ff9900' */
   color: string;
 };
 
-/** Create a translucent tint from various color formats */
+// Build translucent tint from various color formats
 function alphaTint(input: string, alpha = 0.12): string {
   const a = Math.max(0, Math.min(1, alpha));
   if (input.startsWith("hsl(")) return input.replace(/\)$/, ` / ${a})`);
@@ -46,136 +48,176 @@ function alphaTint(input: string, alpha = 0.12): string {
 }
 
 export default function ListItem({ item, onToggle, onChange, onDelete, color }: ListItemProps) {
-  // Dynamic step based on unit: decimals for kg/L, integers otherwise
-  const step = item.unit === "kg" || item.unit === "L" ? 0.1 : 1;
+  // Quantity helpers (mobile-friendly with +/-)
+  const isDecimal = item.unit === "kg" || item.unit === "L";
+  const step = isDecimal ? 0.1 : 1;
+
+  const parseAmount = (raw: string): number | undefined => {
+    const norm = raw.trim().replace(",", ".");
+    if (norm === "") return undefined;
+    const num = Number(norm);
+    if (!Number.isFinite(num) || num < 0) return 0;
+    return isDecimal ? Math.round(num * 10) / 10 : Math.trunc(num);
+  };
+
+  const inc = () => {
+    const base = item.amount ?? 1;
+    const next = isDecimal ? Math.round((base + step) * 10) / 10 : Math.max(0, Math.trunc(base + step));
+    onChange({ amount: next });
+  };
+
+  const dec = () => {
+    const base = item.amount ?? 1;
+    const nextRaw = base - step;
+    const next = isDecimal ? Math.max(0, Math.round(nextRaw * 10) / 10) : Math.max(0, Math.trunc(nextRaw));
+    onChange({ amount: next });
+  };
+
+  const onAmountTyped: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const parsed = parseAmount(e.target.value);
+    onChange({ amount: parsed });
+  };
+
+  const onAmountKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    const allowed = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"];
+    const decimalChars = [",", "."];
+    if (allowed.includes(e.key)) return;
+    if (decimalChars.includes(e.key) && isDecimal) return;
+    if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+  };
 
   const categoryLabel: CategoryLabel = item.category ?? "Default";
   const iconSrc = CATEGORY_ICON_BY_LABEL[categoryLabel];
   const isDefault = categoryLabel === "Default";
 
-  // No tint for Default category
   const effectiveColor = isDefault ? undefined : color;
-
-  // Tints / Styles
-  const bgTint = useMemo(
-    () => (isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.1)),
-    [effectiveColor, isDefault]
-  );
-  const brdTint = useMemo(
-    () => (isDefault ? "rgba(0,0,0,0.10)" : alphaTint(effectiveColor!, 0.35)),
-    [effectiveColor, isDefault]
-  );
-  const barShadow = useMemo(
-    () => (isDefault ? "" : `inset 6px 0 0 0 ${effectiveColor}`),
-    [effectiveColor, isDefault]
-  );
+  const bgTint = useMemo(() => (isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.10)), [effectiveColor, isDefault]);
+  const brdTint = useMemo(() => (isDefault ? "rgba(0,0,0,0.12)" : alphaTint(effectiveColor!, 0.35)), [effectiveColor, isDefault]);
+  const leftAccent = useMemo(() => (isDefault ? "inset 0 0 0 0 transparent" : `inset 6px 0 0 0 ${effectiveColor}`), [effectiveColor, isDefault]);
   const softDrop = "0 1px 2px rgba(0,0,0,0.04)";
 
   return (
     <li className="p-2">
       <div
-        className="relative flex flex-wrap items-center gap-3 rounded-2xl border shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-black/10"
-        style={{
-          backgroundColor: bgTint,
-          borderColor: brdTint,
-          boxShadow: isDefault ? softDrop : `${barShadow}, ${softDrop}`,
-        }}
+        className="relative flex flex-col gap-3 rounded-2xl border shadow-sm p-3 hover:shadow-md transition-all"
+        style={{ backgroundColor: bgTint, borderColor: brdTint, boxShadow: isDefault ? softDrop : `${leftAccent}, ${softDrop}` }}
       >
-        {/* Checkbox */}
-        <input
-          type="checkbox"
-          className="ml-3 mr-1 h-6 w-6 rounded-md border border-black/20"
-          checked={item.done}
-          onChange={() => onToggle(item.id)}
-          aria-label={`Mark ${item.name} as ${item.done ? "not done" : "done"}`}
-          style={{ accentColor: effectiveColor }}
-        />
-
-        {/* Name + inline controls */}
-        <div className="min-w-0 flex-1 py-3">
-          <div className={`font-semibold text-lg truncate ${item.done ? "line-through text-black/45" : ""}`}>
-            {item.name}
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <input
+              type="checkbox"
+              className="h-5 w-5 rounded-md border border-black/20"
+              checked={item.done}
+              onChange={() => onToggle(item.id)}
+              aria-label={`Mark ${item.name} as ${item.done ? "not done" : "done"}`}
+              style={{ accentColor: effectiveColor }}
+            />
+            <div className={`font-semibold text-lg truncate ${item.done ? "line-through text-black/45" : ""}`} title={item.name}>
+              {item.name}
+            </div>
           </div>
 
-          {/* Inline controls: amount + unit + category */}
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <label className="flex items-center gap-1">
-              <span className="text-[hsl(var(--muted))]">Qty</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step={step}
-                min={0}
-                className="h-9 w-24 rounded-md border border-black/10 px-2"
-                value={item.amount ?? ""}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  onChange({ amount: raw === "" ? undefined : Number(raw) });
-                }}
-              />
-            </label>
-
-            <select
-              className="h-9 rounded-md border border-black/10 px-2"
-              value={item.unit ?? ""}
-              onChange={(e) => onChange({ unit: (e.target.value || undefined) as Unit | undefined })}
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+              style={{
+                backgroundColor: isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.16),
+                boxShadow: isDefault ? "0 0 0 1px rgba(0,0,0,0.12) inset" : `0 0 0 1px ${alphaTint(effectiveColor!, 0.35)} inset`,
+              }}
+              title={categoryLabel}
             >
-              <option value="">Unit</option>
-              {UNITS.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
+              {iconSrc ? (
+                <img src={iconSrc} alt="" className="h-4 w-4 object-contain" draggable={false} />
+              ) : (
+                <span className="h-4 w-4 inline-block rounded-full bg-black/10" />
+              )}
+              <span className="hidden sm:inline">{categoryLabel}</span>
+            </span>
 
-            <select
-              className="h-9 rounded-md border border-black/10 px-2"
-              value={categoryLabel}
-              onChange={(e) => onChange({ category: e.target.value as CategoryLabel })}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(item.id)}
+                className="rounded-full p-2 hover:bg-red-50 text-red-500 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200 transition-colors"
+                aria-label={`Delete ${item.name}`}
+                title="Delete"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Right controls: category icon + optional delete */}
-        <div className="mr-3 mb-3 sm:mb-0 flex items-center gap-2" title={categoryLabel} aria-label={categoryLabel}>
-          <span
-            className="inline-flex items-center justify-center rounded-full"
-            style={{
-              width: 32,
-              height: 32,
-              backgroundColor: isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.18),
-              boxShadow: isDefault
-                ? "0 0 0 1px rgba(0,0,0,0.12) inset"
-                : `0 0 0 1px ${alphaTint(effectiveColor!, 0.35)} inset`,
-            }}
-          >
-            {iconSrc ? (
-              <img src={iconSrc} alt="" className="w-[60%] h-[60%] object-contain" draggable={false} />
-            ) : (
-              <span className="text-xs text-gray-500">?</span>
-            )}
-          </span>
+        {/* Details with uniform labels */}
+        <div className="grid grid-cols-1 gap-3 w-full sm:flex sm:items-start sm:gap-4">
+          {/* Qty */}
+          <label className="block sm:basis-0 sm:flex-1">
+            <span className="block text-xs font-medium text-slate-500 mb-1">Qty</span>
+            <div className="inline-flex sm:w-full sm:max-w-60 items-stretch rounded-md border border-black/10 overflow-hidden bg-white">
+              <button
+                type="button"
+                onClick={dec}
+                className="px-2 text-sm hover:bg-slate-50 focus:outline-none"
+                aria-label="Decrease quantity"
+                title="Decrease"
+              >–</button>
+              <input
+                type="text"
+                inputMode={isDecimal ? "decimal" : "numeric"}
+                onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
+                className="h-9 w-20 text-center outline-none px-2"
+                value={item.amount ?? ""}
+                onChange={onAmountTyped}
+                onKeyDown={onAmountKeyDown}
+                aria-label="Quantity"
+              />
+              <button
+                type="button"
+                onClick={inc}
+                className="px-2 text-sm hover:bg-slate-50 focus:outline-none"
+                aria-label="Increase quantity"
+                title="Increase"
+              >+</button>
+            </div>
+          </label>
 
-          {/* Delete button only if parent provided a handler */}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(item.id)}
-              className="rounded-lg border border-[hsl(var(--border))] px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
-              aria-label={`Delete ${item.name}`}
-              title="Delete"
+          {/* Unit */}
+          <label className="block sm:basis-0 sm:flex-1">
+            <span className="block text-xs font-medium text-slate-500 mb-1">Unit</span>
+            <select
+              className="h-9 w-full rounded-md border border-black/10 px-2 bg-white"
+              value={item.unit ?? ""}
+              onChange={(e) => onChange({ unit: (e.target.value || undefined) as Unit | undefined })}
+              aria-label="Unit"
             >
-              Delete
-            </button>
-          )}
+              <option value="">Unit</option>
+              {UNITS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+          </label>
 
-          <span className="sr-only">{categoryLabel}</span>
+          {/* Category */}
+          <label className="block sm:basis-0 sm:flex-1">
+            <span className="block text-xs font-medium text-slate-500 mb-1">Category</span>
+            <select
+              className="h-9 w-full rounded-md border border-black/10 px-2 bg-white"
+              value={categoryLabel}
+              onChange={(e) => onChange({ category: e.target.value as CategoryLabel })}
+              aria-label="Category"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
     </li>
