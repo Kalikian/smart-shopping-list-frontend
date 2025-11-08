@@ -1,9 +1,13 @@
 // src/components/List.tsx
-// List section showing header with counters + items and visible card border.
-// Maps category -> fixed brand colors (CSS variables).
-// If no category is chosen, use a neutral gray (CSS var with fallback).
+// List section with header counters, category-based colors, and inline add-composer.
+// - Prop-based API (no store import): parent passes items/onToggle/onChange/onAdd.
+// - Fixes TS errors: no missing hook export, no implicit any, no unknown prop on ListItem.
+// - UI text in English.
+
+// Keep comments in English for maintainability.
 
 import ListItem, { type Item } from "./ListItem";
+import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 import type { CategoryLabel } from "../constants/categories";
 
 // Neutral gray fallback: uses --cat-neutral if defined, else medium gray.
@@ -25,7 +29,7 @@ const CATEGORY_COLORS: Record<CategoryLabel, string> = {
 
 // Returns per-item color (Default/undefined -> neutral)
 function colorForItem(item: Item): string {
-  const cat: CategoryLabel = item.category ?? "Default";
+  const cat: CategoryLabel = (item.category ?? "Default") as CategoryLabel;
   return CATEGORY_COLORS[cat] ?? NEUTRAL;
 }
 
@@ -33,11 +37,26 @@ type ListProps = {
   items: Item[];
   onToggle: (id: string) => void;
   onChange: (id: string, patch: Partial<Item>) => void;
+  /** Called with a new item draft (without id) created via inline composer */
+  onAdd?: (draft: Omit<Item, "id">) => void;
 };
 
-export default function List({ items, onToggle, onChange }: ListProps) {
-  const total = items.length;
-  const done = items.filter((i) => i.done).length;
+export default function List({ items, onToggle, onChange, onAdd }: ListProps) {
+  // Counters with explicit typing (avoid implicit any)
+  const total: number = items.length;
+  const done: number = items.filter((i: Item) => i.done).length;
+
+  // Map composer payload -> parent draft shape
+  const handleAddSubmit = (data: AddItemInlineSubmit) => {
+    const draft: Omit<Item, "id"> = {
+      name: data.name,
+      amount: data.amount,
+      unit: data.unit,
+      category: data.category,
+      done: false,
+    };
+    onAdd?.(draft);
+  };
 
   return (
     <section className="mt-5 card p-0 overflow-hidden border border-black/10">
@@ -54,14 +73,18 @@ export default function List({ items, onToggle, onChange }: ListProps) {
         </p>
       </header>
 
+      {/* Inline Add Composer (no modal). Shown regardless; submit is a no-op if onAdd is not provided. */}
+      <AddItemInline onSubmit={handleAddSubmit} title="Add item" />
+
       <ul className="divide-y divide-black/5">
-        {items.map((it) => (
+        {items.map((it: Item) => (
           <ListItem
             key={it.id}
             item={it}
             color={colorForItem(it)}
-            onToggle={onToggle}
+            onToggle={() => onToggle(it.id)}
             onChange={(patch) => onChange(it.id, patch)}
+            /* Note: no onDelete prop unless ListItem explicitly supports it */
           />
         ))}
       </ul>
