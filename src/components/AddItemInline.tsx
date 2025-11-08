@@ -5,9 +5,6 @@
 // - Dynamic amount precision: integer for some units (e.g., pcs, pack, g, mL),
 //   decimal for others (e.g., kg, L).
 // - Emits a normalized payload via onSubmit; parent persists the item.
-//
-// Usage:
-//   <AddItemInline onSubmit={(draft) => addItem(draft)} />
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -30,32 +27,29 @@ type Props = {
   title?: string;
 };
 
-// Define which units should be integers vs. decimals.
-// Keep this simple and local; can be moved to constants later if needed.
+// Units: integers vs decimals
 const INTEGER_UNITS = new Set<Unit>(["pcs", "pack", "g", "mL"]);
 const DECIMAL_UNITS = new Set<Unit>(["kg", "L"]);
 
-// Helper: derive numeric input attributes by unit
+// Derive numeric input attributes based on unit
 function amountAttributesFor(unit: Unit) {
-  // For integers, step=1 and inputMode numeric; for decimals, step=0.1
   if (INTEGER_UNITS.has(unit)) {
     return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
   }
   if (DECIMAL_UNITS.has(unit)) {
     return { step: 0.1, inputMode: "decimal" as const, pattern: undefined as string | undefined };
   }
-  // Fallback: allow integers
   return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
 }
 
 export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
-  // --- UI: collapsed vs expanded ---
+  // Collapsed vs expanded
   const [open, setOpen] = useState(false);
 
-  // --- Form state (controlled) ---
+  // Form state
   const [name, setName] = useState("");
-  const [amountStr, setAmountStr] = useState<string>("1");   // keep as string for better UX
-  const [unit, setUnit] = useState<Unit>(UNITS[0]);          // initialize to default (no placeholder)
+  const [amountStr, setAmountStr] = useState<string>("1");
+  const [unit, setUnit] = useState<Unit>(UNITS[0]);
   const [category, setCategory] = useState<CategoryLabel>(CATEGORY_DEFAULT);
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -67,26 +61,25 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
     return () => window.clearTimeout(id);
   }, [open]);
 
-  // Derived flags + attributes
   const canSubmit = name.trim().length > 0;
   const amountAttrs = amountAttributesFor(unit);
 
-  // Normalize + submit
+  // Normalize and submit
   const handleSubmit = () => {
     if (!canSubmit) return;
 
     const trimmed = name.trim();
-
-    // Parse amount according to expected precision
     const raw = amountStr.trim();
-    let parsed = DECIMAL_UNITS.has(unit) ? Number.parseFloat(raw || "1") : Number.parseInt(raw || "1", 10);
+
+    let parsed = DECIMAL_UNITS.has(unit)
+      ? Number.parseFloat(raw || "1")
+      : Number.parseInt(raw || "1", 10);
+
     if (!Number.isFinite(parsed) || parsed <= 0) parsed = 1;
 
-    // For integer units, coerce to integer
     if (INTEGER_UNITS.has(unit)) {
       parsed = Math.max(1, Math.trunc(parsed));
     } else {
-      // For decimal units, round to one decimal place for cleanliness
       parsed = Math.max(1, Math.round(parsed * 10) / 10);
     }
 
@@ -97,7 +90,7 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
       category,
     });
 
-    // Reset to defaults (keep open for rapid entry)
+    // Reset for next quick entry
     setName("");
     setAmountStr("1");
     setUnit(UNITS[0]);
@@ -105,7 +98,7 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
     nameRef.current?.focus();
   };
 
-  // Keyboard: Enter submits when valid
+  // Submit on Enter anywhere inside the card
   const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
     if (e.key === "Enter" && canSubmit) {
       e.preventDefault();
@@ -236,10 +229,6 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
           </button>
         </div>
       </div>
-
-      <p className="mt-2 text-xs text-[hsl(var(--muted))]">
-        Press <kbd>Enter</kbd> to add quickly. Amount defaults to 1 ({INTEGER_UNITS.has(unit) ? "integer" : "decimal"} mode).
-      </p>
     </div>
   );
 }
