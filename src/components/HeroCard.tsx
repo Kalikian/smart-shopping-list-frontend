@@ -63,7 +63,7 @@ export default function HeroCard({
           onClick={handleOpen}
           className="sm:flex-1"
         >
-          Open existing
+          My Lists
         </Button>
       </div>
     </section>

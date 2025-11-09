@@ -10,7 +10,7 @@ import List from "./components/List";
 import Fab from "./components/Fab";
 import ThemeSwitcher from "./components/ThemeSwitcher";
 import CreateListDialog from "./components/CreateListDialog";
-import OpenListDialog from "./components/OpenListDialog";
+import MyListsDialog from "./components/MyListsDialog";
 import type { Item } from "./components/ListItem";
 
 // NOTE: If your TS setup doesn't auto-resolve barrels, keep the /index suffix.
@@ -34,7 +34,7 @@ export default function App() {
 
   // Dialog state
   const [createOpen, setCreateOpen] = useState(false);
-  const [openExistingOpen, setOpenExistingOpen] = useState(false);
+  const [myListsOpen, setMyListsOpen] = useState(false);
 
   // Persist defensively on changes (if a list exists)
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function App() {
 
   // Hero actions → open dialogs (no side effects)
   const handleCreateNew = useCallback(() => setCreateOpen(true), []);
-  const handleOpenExisting = useCallback(() => setOpenExistingOpen(true), []);
+  const handleOpenExisting = useCallback(() => setMyListsOpen(true), []);
 
   const currentListName = list?.name?.trim() || "My list";
 
@@ -102,7 +102,10 @@ export default function App() {
       </div>
 
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
-        <HeroCard onCreateNew={handleCreateNew} onOpenExisting={handleOpenExisting} />
+        <HeroCard
+          onCreateNew={handleCreateNew}
+          onOpenExisting={handleOpenExisting}
+        />
 
         {/* Render list ONLY if it exists */}
         {list && (
@@ -142,10 +145,11 @@ export default function App() {
         onCreated={(snap) => setList(snap)}
       />
 
-      <OpenListDialog
-        open={openExistingOpen}
-        onClose={() => setOpenExistingOpen(false)}
+      <MyListsDialog
+        open={myListsOpen}
+        onClose={() => setMyListsOpen(false)}
         onSelected={(snap) => setList(snap)}
+        onDeletedCurrent={() => setList(null)}
       />
     </div>
   );
