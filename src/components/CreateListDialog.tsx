@@ -1,6 +1,6 @@
 // Modal to create a new named list with uniqueness checks.
-// - Explicit "Confirm" button (sichtbar auch im disabled State)
-// - Enter submits am Desktop, enterKeyHint="done" auf Mobile
+// - Explicit "Confirm" button (visible even when disabled)
+// - Enter submits on desktop, enterKeyHint="done" on mobile
 // - Validates empty + duplicate (case-insensitive)
 // - Calls onCreated(snapshot) on success, onClose() on cancel
 
@@ -27,12 +27,27 @@ export default function CreateListDialog({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Autofocus when opened
+  // Centralized reset
+  function resetState() {
+    setName("");
+    setError(null);
+    setSubmitting(false);
+  }
+
+  // Close with reset (backdrop + Cancel button)
+  function handleCancel() {
+    resetState();
+    onClose();
+  }
+
+  // Autofocus + reset whenever the dialog opens
   useEffect(() => {
     if (open) {
+      resetState();
       setTimeout(() => inputRef.current?.focus(), 0);
-      setName("");
-      setError(null);
+    } else {
+      // also ensure reset when closing programmatically
+      setSubmitting(false);
     }
   }, [open]);
 
@@ -48,22 +63,28 @@ export default function CreateListDialog({
 
     setSubmitting(true);
     setError(null);
+
     try {
       const res = createAndSelectListUnique(trimmed);
       if (!res.ok && res.reason === "duplicate") {
         setError("A list with this name already exists.");
-        setSubmitting(false);
         return;
       }
       if (res.ok) {
         onCreated?.(res.list);
+        // Reset before closing to avoid sticky UI state when reopened
+        resetState();
         onClose();
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       setError(
-        e instanceof Error ? e.message : "Unexpected error. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Unexpected error. Please try again."
       );
+    } finally {
+      // Safety: if the parent doesn't close immediately, button recovers
       setSubmitting(false);
     }
   }
@@ -75,7 +96,7 @@ export default function CreateListDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       role="dialog"
       aria-modal="true"
-      onClick={onClose} // click outside closes
+      onClick={handleCancel} // click outside closes (with reset)
     >
       <div
         className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-neutral-900"
@@ -115,7 +136,7 @@ export default function CreateListDialog({
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCancel}
               className="inline-flex min-w-24 items-center justify-center rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] px-4 py-2 text-sm text-[hsl(var(--text))] hover:bg-[hsl(var(--surface-2))]"
             >
               Cancel
@@ -124,12 +145,13 @@ export default function CreateListDialog({
             <button
               type="submit"
               data-cy="confirm-btn"
+              disabled={!canSubmit}
               className={`inline-flex min-w-[110px] items-center justify-center rounded-xl px-4 py-2 text-sm font-medium
-      ${
-        canSubmit
-          ? "bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] hover:bg-[hsl(var(--accent-700))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
-          : "bg-[hsl(var(--surface-2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))] opacity-60 pointer-events-none"
-      }`}
+              ${
+                canSubmit
+                  ? "bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] hover:bg-[hsl(var(--accent-700))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
+                  : "bg-[hsl(var(--surface-2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))] opacity-60"
+              }`}
             >
               {submitting ? "Creating…" : "Confirm"}
             </button>
