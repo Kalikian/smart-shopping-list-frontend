@@ -16,6 +16,7 @@
   --text: 222 47% 11%;
   --muted: 215 16% 47%;
   --ring: 215 20% 65%;
+  --border: 215 20% 65%;
 
   --radius: 16px;
   --radius-sm: 12px;
@@ -50,6 +51,7 @@
     --text: 210 40% 96%;
     --muted: 217 12% 63%;
     --ring: 160 60% 45%;
+    --border: 215 20% 30%;
 
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.25);
     --shadow-md: 0 8px 24px -8px hsl(0 0% 0% / 0.45);
@@ -74,6 +76,41 @@
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+  }
+
+  /* Global baseline for inputs/selects/textareas (theme-synced) */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--surface));
+    color: hsl(var(--text));
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem; /* 8px 12px */
+    outline: none; /* we use box-shadow on focus */
+    box-shadow: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):focus,
+  select:focus,
+  textarea:focus {
+    border-color: hsl(var(--accent));
+    /* focus ring (like Tailwind's ring) */
+    box-shadow: 0 0 0 2px hsl(var(--accent) / 0.35);
+  }
+
+  /* Optional: placeholder color */
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted));
+    opacity: 0.85;
+  }
+
+  /* Optional: error helper class you can add alongside the element */
+  .input-error {
+    border-color: #ef4444; /* red-500 */
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35); /* red focus ring */
   }
 }
 

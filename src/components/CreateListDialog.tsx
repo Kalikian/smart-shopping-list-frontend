@@ -1,9 +1,8 @@
 // Modal to create a new named list with uniqueness checks.
-// - Does NOT create anything until the user confirms
-// - Validates empty names and duplicates (case-insensitive)
+// - Explicit "Confirm" button (sichtbar auch im disabled State)
+// - Enter submits am Desktop, enterKeyHint="done" auf Mobile
+// - Validates empty + duplicate (case-insensitive)
 // - Calls onCreated(snapshot) on success, onClose() on cancel
-//
-// Styling assumes Tailwind; tweak classes to match your tokens/theme.
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -18,7 +17,11 @@ type CreateListDialogProps = {
   onCreated?: (list: ListSnapshot) => void;
 };
 
-export default function CreateListDialog({ open, onClose, onCreated }: CreateListDialogProps) {
+export default function CreateListDialog({
+  open,
+  onClose,
+  onCreated,
+}: CreateListDialogProps) {
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,9 +60,11 @@ export default function CreateListDialog({ open, onClose, onCreated }: CreateLis
         onClose();
       }
     } catch (e) {
-       console.error(e);
-       setError(e instanceof Error ? e.message : "Unexpected error. Please try again.");
-       setSubmitting(false);
+      console.error(e);
+      setError(
+        e instanceof Error ? e.message : "Unexpected error. Please try again."
+      );
+      setSubmitting(false);
     }
   }
 
@@ -80,7 +85,10 @@ export default function CreateListDialog({ open, onClose, onCreated }: CreateLis
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="listName" className="mb-1 block text-sm text-neutral-600 dark:text-neutral-300">
+            <label
+              htmlFor="listName"
+              className="mb-1 block text-sm text-neutral-600 dark:text-neutral-300"
+            >
               List name
             </label>
             <input
@@ -88,13 +96,16 @@ export default function CreateListDialog({ open, onClose, onCreated }: CreateLis
               ref={inputRef}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`w-full rounded-xl border px-3 py-2 outline-none
-                ${isDuplicate ? "border-red-500" : "border-neutral-300 dark:border-neutral-700"}
-                focus:ring-2 focus:ring-accent-500`}
+              className={`w-full mt-1 ${isDuplicate ? "input-error" : ""}`}
               placeholder="e.g., Weekly Groceries"
+              enterKeyHint="done"
+              inputMode="text"
+              autoComplete="off"
             />
             {isDuplicate && (
-              <p className="mt-1 text-sm text-red-600">This name is already in use.</p>
+              <p className="mt-1 text-sm text-red-600">
+                This name is already in use.
+              </p>
             )}
             {error && !isDuplicate && (
               <p className="mt-1 text-sm text-red-600">{error}</p>
@@ -105,17 +116,22 @@ export default function CreateListDialog({ open, onClose, onCreated }: CreateLis
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+              className="inline-flex min-w-24 items-center justify-center rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] px-4 py-2 text-sm text-[hsl(var(--text))] hover:bg-[hsl(var(--surface-2))]"
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              disabled={!canSubmit}
-              className={`rounded-xl px-4 py-2 text-sm text-white
-                ${canSubmit ? "bg-accent-600 hover:bg-accent-700" : "bg-accent-300 cursor-not-allowed"}`}
+              data-cy="confirm-btn"
+              className={`inline-flex min-w-[110px] items-center justify-center rounded-xl px-4 py-2 text-sm font-medium
+      ${
+        canSubmit
+          ? "bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] hover:bg-[hsl(var(--accent-700))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
+          : "bg-[hsl(var(--surface-2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))] opacity-60 pointer-events-none"
+      }`}
             >
-              {submitting ? "Creating..." : "Create list"}
+              {submitting ? "Creating…" : "Confirm"}
             </button>
           </div>
         </form>

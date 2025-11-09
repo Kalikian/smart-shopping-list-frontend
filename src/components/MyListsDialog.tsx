@@ -124,7 +124,9 @@ export default function MyListsDialog({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name…"
-            className="w-full rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-accent-500 dark:border-neutral-700"
+            className="w-full"
+            enterKeyHint="search"
+            autoComplete="off"
           />
         </div>
 
