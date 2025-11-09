@@ -74,3 +74,34 @@ export function uuid(): string {
         return v.toString(16);
     });
 }
+
+// -------- Current selection helpers --------
+export function clearCurrentListId() {
+    localStorage.removeItem(CURRENT_ID_KEY);
+}
+
+// -------- Hard delete a list from Local Storage --------
+// Removes the list document, updates the index and fixes currentListId if needed.
+// Returns the next current list id (or null) so the UI can react accordingly.
+export function removeListById(listId: string): string | null {
+    // 1) Remove the list payload
+    localStorage.removeItem(LIST_DOC_KEY(listId));
+
+    // 2) Update index (metadata list)
+    const prevIndex = readIndex();
+    const nextIndex = prevIndex.filter(m => m.id !== listId);
+    writeIndex(nextIndex);
+
+    // 3) Repair current selection if it pointed to the deleted list
+    const current = getCurrentListId();
+    if (current === listId) {
+        const fallback = nextIndex.length > 0 ? nextIndex[0].id : null;
+        if (fallback) {
+            setCurrentListId(fallback);
+        } else {
+            clearCurrentListId();
+        }
+        return fallback;
+    }
+    return current; // unchanged
+}

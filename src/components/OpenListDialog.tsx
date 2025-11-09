@@ -2,6 +2,7 @@
 // - Loads all ListMeta via getAllLists() when opened
 // - Filter-as-you-type (case-insensitive)
 // - Selects list via selectList(id) and returns the snapshot to parent via onSelected
+// - Supports hard delete of a list (doc + index + current pointer repair)
 // - No side effects outside of explicit selection
 //
 // Tailwind-based styling; adjust tokens as needed.
@@ -13,6 +14,8 @@ import {
   type ListMeta,
   type ListSnapshot,
 } from "../data/listStore";
+// Storage-level helpers for hard delete + index refresh
+import { removeListById, readIndex } from "../data/listStore/storage";
 
 type OpenListDialogProps = {
   open: boolean;
@@ -20,7 +23,11 @@ type OpenListDialogProps = {
   onSelected?: (list: ListSnapshot) => void;
 };
 
-export default function OpenListDialog({ open, onClose, onSelected }: OpenListDialogProps) {
+export default function OpenListDialog({
+  open,
+  onClose,
+  onSelected,
+}: OpenListDialogProps) {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<ListMeta[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,6 +72,24 @@ export default function OpenListDialog({ open, onClose, onSelected }: OpenListDi
     } catch (e) {
       console.error(e);
       setError("Unexpected error. Please try again.");
+    }
+  }
+
+  // Hard delete handler (Local Storage + UI index refresh)
+  function handleDelete(id: string) {
+    // Simple safety check; replace with a custom modal if desired.
+    const ok = window.confirm("Delete this list permanently?");
+    if (!ok) return;
+
+    try {
+      removeListById(id); // Purge LS (doc + index + current repair)
+      const next = readIndex(); // Read fresh index for UI
+      setItems(next);
+      // If the user had a filter query that now hides everything, keep it;
+      // the UX will simply show "No lists found."
+    } catch (e) {
+      console.error(e);
+      setError("Failed to delete list. Please try again.");
     }
   }
 
@@ -123,16 +148,37 @@ export default function OpenListDialog({ open, onClose, onSelected }: OpenListDi
                 aria-label="Available lists"
               >
                 {filtered.map((m) => (
-                  <li key={m.id} className="rounded-xl border border-neutral-200 dark:border-neutral-800">
-                    <button
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                      onClick={() => handleChoose(m.id)}
-                    >
-                      <span className="font-medium">{m.name}</span>
-                      <span className="text-xs text-neutral-500">
-                        Updated {new Date(m.updatedAt).toLocaleString()}
-                      </span>
-                    </button>
+                  <li
+                    key={m.id}
+                    className="rounded-xl border border-neutral-200 dark:border-neutral-800"
+                  >
+                    <div className="flex w-full items-center justify-between rounded-xl px-3 py-2">
+                      {/* Select = click left area */}
+                      <button
+                        className="flex flex-1 items-center justify-between text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-lg px-2 py-1"
+                        onClick={() => handleChoose(m.id)}
+                        aria-label={`Open list ${m.name}`}
+                      >
+                        <span className="font-medium">{m.name}</span>
+                        <span className="text-xs text-neutral-500">
+                          Updated {new Date(m.updatedAt).toLocaleString()}
+                        </span>
+                      </button>
+
+                      {/* Delete button (does not trigger select) */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent select
+                          handleDelete(m.id);
+                        }}
+                        className="ml-2 rounded-lg p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        aria-label={`Delete list ${m.name}`}
+                        title="Delete list"
+                      >
+                        🗑
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
