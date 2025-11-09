@@ -15,13 +15,14 @@ import {
   loadSnapshot,
   saveSnapshot,
   createNewList,
-  createAndSelectList, // exists in your store
+  createAndSelectList,
   toggleItem,
   updateItem,
   addItem as addItemStore,
   removeItem as removeItemStore,
   type ListSnapshot,
-} from "./data/listStore";
+} from "./data/listStore/index";     // Barrel
+
 
 function newItemId() {
   return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
