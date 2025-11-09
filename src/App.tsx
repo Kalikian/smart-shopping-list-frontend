@@ -1,6 +1,6 @@
 // src/App.tsx
 // Orchestrates UI + offline-first data access via listStore.
-// Inline create uses theme colors; list renders only after user names it.
+// Creation/open flows now use dialogs; list renders only after user confirms.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "./components/AppHeader";
@@ -9,20 +9,20 @@ import FeatureTiles from "./components/FeatureTiles";
 import List from "./components/List";
 import Fab from "./components/Fab";
 import ThemeSwitcher from "./components/ThemeSwitcher";
+import CreateListDialog from "./components/CreateListDialog";
+import OpenListDialog from "./components/OpenListDialog";
 import type { Item } from "./components/ListItem";
 
+// NOTE: If your TS setup doesn't auto-resolve barrels, keep the /index suffix.
 import {
   loadSnapshot,
   saveSnapshot,
-  createNewList,
-  createAndSelectList,
   toggleItem,
   updateItem,
   addItem as addItemStore,
   removeItem as removeItemStore,
   type ListSnapshot,
-} from "./data/listStore/index";     // Barrel
-
+} from "./data/listStore/index";
 
 function newItemId() {
   return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -32,9 +32,9 @@ export default function App() {
   // Load snapshot if one exists; do NOT auto-create.
   const [list, setList] = useState<ListSnapshot | null>(loadSnapshot());
 
-  // Inline-create UI state
-  const [isInlineCreateOpen, setInlineCreateOpen] = useState(false);
-  const [newListName, setNewListName] = useState("");
+  // Dialog state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [openExistingOpen, setOpenExistingOpen] = useState(false);
 
   // Persist defensively on changes (if a list exists)
   useEffect(() => {
@@ -87,44 +87,9 @@ export default function App() {
     [list]
   );
 
-  // Hero actions
-  const handleCreateNew = useCallback(() => {
-    // Open inline name panel right under hero; no scrolling.
-    setInlineCreateOpen(true);
-  }, []);
-
-  const handleConfirmCreate = useCallback(
-    (e?: React.FormEvent) => {
-      e?.preventDefault();
-      const trimmed = newListName.trim();
-      if (trimmed.length < 3) return;
-
-      // Create a new empty list with a name and select it
-      let created: ListSnapshot;
-      if (typeof createAndSelectList === "function") {
-        created = createAndSelectList(trimmed);
-      } else {
-        // Fallback (should not be hit in your current store)
-        const snap = createNewList();
-        created = { ...snap, name: trimmed };
-        saveSnapshot(created);
-      }
-
-      setList(created);              // show empty list now
-      setNewListName("");
-      setInlineCreateOpen(false);
-    },
-    [newListName]
-  );
-
-  const handleCancelCreate = useCallback(() => {
-    setNewListName("");
-    setInlineCreateOpen(false);
-  }, []);
-
-  const handleOpenExisting = useCallback(() => {
-    // Placeholder for future picker
-  }, []);
+  // Hero actions → open dialogs (no side effects)
+  const handleCreateNew = useCallback(() => setCreateOpen(true), []);
+  const handleOpenExisting = useCallback(() => setOpenExistingOpen(true), []);
 
   const currentListName = list?.name?.trim() || "My list";
 
@@ -138,53 +103,6 @@ export default function App() {
 
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
         <HeroCard onCreateNew={handleCreateNew} onOpenExisting={handleOpenExisting} />
-
-        {/* Inline create panel (right under hero, theme-colored) */}
-        {isInlineCreateOpen && (
-          <form
-            onSubmit={handleConfirmCreate}
-            className="mt-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--panel))] p-4 shadow-sm"
-          >
-            <div className="flex items-end gap-3 max-sm:flex-col max-sm:items-stretch">
-              <div className="grow">
-                <label htmlFor="inline-list-name" className="block text-sm font-medium">
-                  List name
-                </label>
-                <input
-                  id="inline-list-name"
-                  type="text"
-                  value={newListName}
-                  onChange={(e) => setNewListName(e.target.value)}
-                  placeholder="e.g., Lidl, Weekly Groceries, Party Prep"
-                  className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
-                  minLength={3}
-                  maxLength={60}
-                  autoComplete="off"
-                />
-                <p className="mt-1 text-xs opacity-70">
-                  Tip: choose a clear, memorable name.
-                </p>
-              </div>
-
-              <div className="flex gap-2 max-sm:justify-end">
-                <button
-                  type="button"
-                  onClick={handleCancelCreate}
-                  className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--panel))] px-4 py-2 text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={newListName.trim().length < 3}
-                  className="rounded-xl bg-[hsl(var(--accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                >
-                  Create
-                </button>
-              </div>
-            </div>
-          </form>
-        )}
 
         {/* Render list ONLY if it exists */}
         {list && (
@@ -215,6 +133,19 @@ export default function App() {
             .querySelector("#current-list")
             ?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
+      />
+
+      {/* --- Modals --- */}
+      <CreateListDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(snap) => setList(snap)}
+      />
+
+      <OpenListDialog
+        open={openExistingOpen}
+        onClose={() => setOpenExistingOpen(false)}
+        onSelected={(snap) => setList(snap)}
       />
     </div>
   );
