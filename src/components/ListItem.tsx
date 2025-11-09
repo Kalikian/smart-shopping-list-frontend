@@ -209,35 +209,46 @@ export default function ListItem({
             <span className="block text-xs font-medium text-slate-500 mb-1">
               Qty
             </span>
-            <div className="inline-flex sm:w-full sm:max-w-60 items-stretch rounded-md border border-black/10 overflow-hidden bg-white">
-              <button
-                type="button"
-                onClick={dec}
-                className="px-2 text-sm hover:bg-slate-50 focus:outline-none"
-                aria-label="Decrease quantity"
-                title="Decrease"
+
+            {/* center on larger screens */}
+            <div className="sm:flex sm:justify-center">
+              {/* outer container with theme-based focus highlight */}
+              <div
+                className="inline-flex sm:w-full sm:max-w-60 items-stretch rounded-full border border-black/10 bg-white overflow-hidden
+                 transition focus-within:border-[hsl(var(--accent))]
+                 focus-within:ring-2 focus-within:ring-[hsl(var(--accent))/0.35]"
               >
-                –
-              </button>
-              <input
-                type="text"
-                inputMode={isDecimal ? "decimal" : "numeric"}
-                onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                className="h-9 w-20 text-center outline-none px-2"
-                value={item.amount ?? ""}
-                onChange={onAmountTyped}
-                onKeyDown={onAmountKeyDown}
-                aria-label="Quantity"
-              />
-              <button
-                type="button"
-                onClick={inc}
-                className="px-2 text-sm hover:bg-slate-50 focus:outline-none"
-                aria-label="Increase quantity"
-                title="Increase"
-              >
-                +
-              </button>
+                <button
+                  type="button"
+                  onClick={dec}
+                  className="w-10 h-10 grid place-items-center select-none hover:bg-slate-50 focus:outline-none"
+                  aria-label="Decrease quantity"
+                  title="Decrease"
+                >
+                  –
+                </button>
+
+                <input
+                  type="text"
+                  inputMode={isDecimal ? "decimal" : "numeric"}
+                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
+                  className="h-10 w-20 sm:w-24 text-center outline-none px-2 border-0 focus:ring-0"
+                  value={item.amount ?? ""}
+                  onChange={onAmountTyped}
+                  onKeyDown={onAmountKeyDown}
+                  aria-label="Quantity"
+                />
+
+                <button
+                  type="button"
+                  onClick={inc}
+                  className="w-10 h-10 grid place-items-center select-none hover:bg-slate-50 focus:outline-none"
+                  aria-label="Increase quantity"
+                  title="Increase"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </label>
 
@@ -247,7 +258,7 @@ export default function ListItem({
               Unit
             </span>
             <select
-              className="h-9 w-full rounded-md border border-black/10 px-2 bg-white"
+              className="select-fix w-full dark:border-neutral-700 dark:bg-neutral-900"
               value={item.unit ?? ""}
               onChange={(e) =>
                 onChange({
@@ -271,7 +282,7 @@ export default function ListItem({
               Category
             </span>
             <select
-              className="h-9 w-full rounded-md border border-black/10 px-2 bg-white"
+              className="select-fix w-full dark:border-neutral-700 dark:bg-neutral-900"
               value={categoryLabel}
               onChange={(e) =>
                 onChange({ category: e.target.value as CategoryLabel })

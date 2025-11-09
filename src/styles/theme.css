@@ -181,6 +181,31 @@
   .safe-b {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
+  /* Robust vertical baseline for native selects (avoids clipping of g/j/p/q/y) */
+  .select-fix {
+    display: block;
+    height: auto;
+    min-height: 44px;
+    line-height: normal;
+    padding-block: 0.625rem; /* 10px */
+    padding-inline: 0.75rem; /* 12px */
+    overflow: visible;
+    box-sizing: border-box;
+
+    /* baseline border in theme colors */
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--surface));
+    color: hsl(var(--text));
+    border-radius: var(--radius-sm);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  /* theme-aware focus ring */
+  .select-fix:focus {
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 2px hsl(var(--accent) / 0.35);
+  }
 }
 
 /* ---------- 5) Background presets ---------- */
