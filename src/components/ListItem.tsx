@@ -102,7 +102,7 @@ export default function ListItem({
   const qtyId = `qty-${item.id}`;
 
   return (
-    <li className="p-2">
+    <li className="list-none marker:hidden p-2">
       <div className="relative rounded-2xl overflow-hidden" {...handlers}>
         {/* Swipe background */}
         <div
