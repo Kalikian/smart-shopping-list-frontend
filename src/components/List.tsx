@@ -73,6 +73,10 @@ export default function List({
   );
   const doneItems = useMemo(() => sorted.filter((i) => i.done), [sorted]);
 
+  const openCount = openItems.length;
+  const laterCount = laterItems.length;
+  const remaining = openCount + laterCount;
+
   // 2) collapsible
   const [showLater, setShowLater] = useState(false);
   const [showDone, setShowDone] = useState(false);
@@ -156,16 +160,8 @@ export default function List({
       {/* Open header */}
       <header className="flex items-center justify-between">
         <h2 className="text-base font-semibold">
-          Open <span className="text-slate-500">({openItems.length})</span>
+          Remaining <span className="text-slate-500">({remaining})</span>
         </h2>
-        <button
-          type="button"
-          onClick={() => setShowDone((v) => !v)}
-          className="text-sm underline underline-offset-2"
-          aria-expanded={showDone}
-        >
-          {showDone ? "Hide in cart" : `Show in cart (${doneItems.length})`}
-        </button>
       </header>
 
       {/* Inline Add */}
