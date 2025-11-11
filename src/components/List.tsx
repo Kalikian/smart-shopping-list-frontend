@@ -1,109 +1,185 @@
 // src/components/List.tsx
-// List section with header counters, category-based colors, and inline add-composer.
-// - Prop-based API (items/onToggle/onChange/onAdd/onDelete)
-// - Renders items sorted by Category (CATEGORIES order) -> Name (A–Z).
-// - Forwards optional onDelete to ListItem so a Delete button appears per row.
+// Open (N) + collapsible "In cart (M)" with per-item Undo (English labels).
+// Uses shared utils/sortItems to keep ordering stable across state changes (incl. Undo).
 
+import { useMemo, useState } from "react";
 import ListItem, { type Item } from "./ListItem";
-import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 import type { CategoryLabel } from "../constants/categories";
-import { useMemo } from "react";
+import { CATEGORY_ICON_BY_LABEL } from "../constants/categories";
 import { sortItemsByCategory } from "../utils/sortItems";
-
-// Neutral gray fallback: uses --cat-neutral if defined, else medium gray.
-const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
-
-// Map each category to its color token; include "Default" -> neutral.
-const CATEGORY_COLORS: Record<CategoryLabel, string> = {
-  Default: NEUTRAL,
-  Produce: `hsl(var(--cat-produce))`,
-  Dairy: `hsl(var(--cat-dairy))`,
-  "Meat & Fish": `hsl(var(--cat-meat))`,
-  Bakery: `hsl(var(--cat-bakery))`,
-  "Pantry (Dry)": `hsl(var(--cat-pantry))`,
-  Beverages: `hsl(var(--cat-beverages))`,
-  Frozen: `hsl(var(--cat-frozen))`,
-  "Snacks & Sweets": `hsl(var(--cat-snacks))`,
-  "Household & Care": `hsl(var(--cat-household))`,
-};
-
-// Returns per-item color (Default/undefined -> neutral)
-function colorForItem(item: Item): string {
-  const cat: CategoryLabel = (item.category ?? "Default") as CategoryLabel;
-  return CATEGORY_COLORS[cat] ?? NEUTRAL;
-}
 
 type ListProps = {
   items: Item[];
-  onToggle: (id: string) => void;
+  onToggle?: (id: string) => void;
   onChange: (id: string, patch: Partial<Item>) => void;
-  /** Called with a new item draft (without id) created via inline composer */
-  onAdd?: (draft: Omit<Item, "id">) => void;
-  /** Optional delete hook; when provided, ListItem shows a Delete button */
   onDelete?: (id: string) => void;
+  getColorForCategory: (c: CategoryLabel) => string;
 };
+
+const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
 
 export default function List({
   items,
   onToggle,
   onChange,
-  onAdd,
   onDelete,
+  getColorForCategory,
 }: ListProps) {
-  // Stable, view-only sorted snapshot for rendering
-  const sortedItems = useMemo(() => sortItemsByCategory(items), [items]);
+  // Single source of truth: first sort, then split into open/done.
+  const sorted = useMemo(() => sortItemsByCategory(items), [items]);
+  const openItems = useMemo(() => sorted.filter((i) => !i.done), [sorted]);
+  const doneItems = useMemo(() => sorted.filter((i) => i.done), [sorted]);
 
-  const total: number = sortedItems.length;
-  const done: number = useMemo(
-    () => sortedItems.filter((i) => i.done).length,
-    [sortedItems]
-  );
+  const [showDone, setShowDone] = useState(false);
 
-  // Map composer payload -> parent draft shape
-  const handleAddSubmit = (data: AddItemInlineSubmit) => {
-    const draft: Omit<Item, "id"> = {
-      name: data.name,
-      amount: data.amount,
-      unit: data.unit,
-      category: data.category,
-      done: false,
-    };
-    onAdd?.(draft);
-  };
+  const colorFor = (c: CategoryLabel) =>
+    c === "Default" ? NEUTRAL : getColorForCategory(c);
 
   return (
-    <section
-      id="current-list" // keep anchor id for potential use; no scroll logic tied here
-      className="mt-5 card p-0 overflow-hidden border border-black/10"
-    >
-      <header
-        className="px-4 py-3 border-b border-black/10"
-        style={{
-          background:
-            "linear-gradient(180deg, hsl(var(--bg)) 0%, hsl(var(--bg)) 60%, rgba(0,0,0,0.02) 100%)",
-        }}
-      >
-        <h3 className="font-semibold">Current list</h3>
-        <p className="text-sm text-[hsl(var(--muted))]">
-          {total} total • {done} done
-        </p>
+    <section className="space-y-4">
+      {/* Header: Open */}
+      <header className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">
+          Open <span className="text-slate-500">({openItems.length})</span>
+        </h2>
+
+        <button
+          type="button"
+          onClick={() => setShowDone((v) => !v)}
+          className="text-sm underline underline-offset-2"
+          aria-expanded={showDone}
+        >
+          {showDone ? "Hide in cart" : `Show in cart (${doneItems.length})`}
+        </button>
       </header>
 
-      {/* Inline Add Composer */}
-      <AddItemInline onSubmit={handleAddSubmit} title="Add item" />
-
-      <ul className="divide-y divide-black/5">
-        {sortedItems.map((it) => (
+      {/* OPEN ITEMS */}
+      <ul>
+        {openItems.map((it) => (
           <ListItem
             key={it.id}
             item={it}
-            color={colorForItem(it)}
-            onToggle={() => onToggle(it.id)}
+            onToggle={onToggle ?? (() => {})}
             onChange={(patch) => onChange(it.id, patch)}
-            onDelete={onDelete ? () => onDelete(it.id) : undefined}
+            onDelete={onDelete}
+            color={colorFor(it.category ?? "Default")}
           />
         ))}
+
+        {openItems.length === 0 && (
+          <li className="p-3 text-sm text-slate-500">Nothing open.</li>
+        )}
       </ul>
+
+      {/* DONE BUCKET */}
+      <div className="border-t border-black/10 pt-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">
+            In cart <span className="text-slate-500">({doneItems.length})</span>
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowDone((v) => !v)}
+            className="text-sm underline underline-offset-2"
+            aria-expanded={showDone}
+          >
+            {showDone ? "Collapse" : "Show all"}
+          </button>
+        </div>
+
+        {showDone && (
+          <ul className="mt-2 space-y-2">
+            {doneItems.length === 0 && (
+              <li className="p-3 text-sm text-slate-500">No items in cart.</li>
+            )}
+
+            {doneItems.map((it) => (
+              <DoneRow
+                key={it.id}
+                item={it}
+                color={colorFor(it.category ?? "Default")}
+                onUndo={() => onChange(it.id, { done: false })}
+                onDelete={onDelete}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
+  );
+}
+
+function DoneRow({
+  item,
+  color,
+  onUndo,
+  onDelete,
+}: {
+  item: Item;
+  color: string;
+  onUndo: () => void;
+  onDelete?: (id: string) => void;
+}) {
+  const category: CategoryLabel = item.category ?? "Default";
+  const iconSrc = CATEGORY_ICON_BY_LABEL[category];
+
+  return (
+    <li className="p-2">
+      <div
+        className="flex items-center justify-between gap-3 rounded-xl border bg-white p-3"
+        style={{
+          borderColor: "rgba(0,0,0,0.12)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+        }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span
+            className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: color, opacity: 0.2 }}
+            aria-hidden
+          >
+            {iconSrc ? (
+              <img
+                src={iconSrc}
+                alt=""
+                className="h-4 w-4 object-contain opacity-80"
+              />
+            ) : (
+              <span className="h-3 w-3 rounded-full bg-black/20 inline-block" />
+            )}
+          </span>
+
+          <div className="min-w-0">
+            <div className="font-medium truncate">{item.name}</div>
+            <div className="text-xs text-slate-500">
+              {item.amount ?? "–"} {item.unit ?? ""}
+              {category !== "Default" ? ` · ${category}` : ""}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onUndo}
+            className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
+            title="Move back to Open"
+          >
+            Undo
+          </button>
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(item.id)}
+              className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
+              title="Delete item"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+    </li>
   );
 }

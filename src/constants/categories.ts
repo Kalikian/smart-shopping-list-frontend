@@ -62,3 +62,23 @@ export const UNITS = ["pcs", "kg", "g", "L", "mL", "pack"] as const;
 
 /** Unit type derived from UNITS */
 export type Unit = (typeof UNITS)[number];
+
+// Map UI labels -> CSS token names (without the `--` prefix)
+export const CATEGORY_TOKEN_BY_LABEL: Record<CategoryLabel, `cat-${string}`> = {
+    Default: "cat-neutral",
+    Produce: "cat-produce",
+    Dairy: "cat-dairy",
+    "Meat & Fish": "cat-meat",
+    Bakery: "cat-bakery",
+    "Pantry (Dry)": "cat-pantry",
+    Beverages: "cat-beverages",
+    Frozen: "cat-frozen",
+    "Snacks & Sweets": "cat-snacks",
+    "Household & Care": "cat-household",
+};
+
+// Convenience: returns `hsl(var(--cat-...))` for a label
+export function getColorVarForCategory(label: CategoryLabel | undefined): string {
+    const token = CATEGORY_TOKEN_BY_LABEL[label ?? "Default"] ?? "cat-neutral";
+    return `hsl(var(--${token}))`;
+}

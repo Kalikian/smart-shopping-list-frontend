@@ -1,6 +1,6 @@
 // src/App.tsx
 // Orchestrates UI + offline-first data access via listStore.
-// Creation/open flows now use dialogs; list renders only after user confirms.
+// Creation/open flows use dialogs; list renders only after user confirms.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "./components/AppHeader";
@@ -12,6 +12,8 @@ import ThemeSwitcher from "./components/ThemeSwitcher";
 import CreateListDialog from "./components/CreateListDialog";
 import MyListsDialog from "./components/MyListsDialog";
 import type { Item } from "./components/ListItem";
+import type { CategoryLabel } from "./constants/categories";
+import { getColorVarForCategory } from "./constants/categories";
 
 // NOTE: If your TS setup doesn't auto-resolve barrels, keep the /index suffix.
 import {
@@ -19,14 +21,9 @@ import {
   saveSnapshot,
   toggleItem,
   updateItem,
-  addItem as addItemStore,
   removeItem as removeItemStore,
   type ListSnapshot,
 } from "./data/listStore/index";
-
-function newItemId() {
-  return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
 export default function App() {
   // Load snapshot if one exists; do NOT auto-create.
@@ -68,16 +65,6 @@ export default function App() {
     [list]
   );
 
-  const handleAdd = useCallback(
-    (draft: Omit<Item, "id">) => {
-      if (!list) return;
-      const item: Item = { id: newItemId(), ...draft };
-      const snap = addItemStore(item);
-      setList(snap);
-    },
-    [list]
-  );
-
   const handleDelete = useCallback(
     (id: string) => {
       if (!list) return;
@@ -92,6 +79,12 @@ export default function App() {
   const handleOpenExisting = useCallback(() => setMyListsOpen(true), []);
 
   const currentListName = list?.name?.trim() || "My list";
+
+  // Category color resolver for List/ListItem (maps to CSS tokens)
+  const getColorForCategory = useCallback(
+    (c: CategoryLabel) => getColorVarForCategory(c),
+    []
+  );
 
   return (
     <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
@@ -121,8 +114,8 @@ export default function App() {
               items={list.items}
               onToggle={handleToggle}
               onChange={handlePatch}
-              onAdd={handleAdd}
               onDelete={handleDelete}
+              getColorForCategory={getColorForCategory}
             />
           </section>
         )}

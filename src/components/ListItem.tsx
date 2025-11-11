@@ -1,12 +1,8 @@
 // src/components/ListItem.tsx
-// Swipe-to-cart UX with inline Undo and collapse animation.
-// - Right swipe => mark done (in cart), show Undo, then collapse
-// - Left swipe  => "skip" hint only (visual), no state change yet
-// - Colored swipe backgrounds + icons
-// - Keeps existing +/- stepper and selects
-// - English comments (as requested)
+// Swipe-to-cart UX (right swipe => mark done), no local collapse.
+// Visual swipe backgrounds + icons. All labels in English.
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import {
   CATEGORY_ICON_BY_LABEL,
@@ -20,7 +16,7 @@ import TrashButton from "./ui/TrashButton";
 export type Item = {
   id: string;
   name: string;
-  done: boolean; // will be set to true when swiped right
+  done: boolean;
   amount?: number;
   unit?: Unit;
   category?: CategoryLabel;
@@ -28,7 +24,7 @@ export type Item = {
 
 type ListItemProps = {
   item: Item;
-  onToggle: (id: string) => void; // not used here
+  onToggle: (id: string) => void; // (kept for compatibility, not used here)
   onChange: (patch: Partial<Item>) => void;
   onDelete?: (id: string) => void;
   color: string;
@@ -114,9 +110,8 @@ export default function ListItem({
     if (!/^[0-9]$/.test(e.key)) e.preventDefault();
   };
 
-  // ----- Color / visual tokens -----
+  // ----- Colors / tokens -----
   const categoryLabel: CategoryLabel = item.category ?? "Default";
-  const iconSrc = CATEGORY_ICON_BY_LABEL[categoryLabel];
   const isDefault = categoryLabel === "Default";
 
   const effectiveColor = isDefault ? undefined : color;
@@ -138,55 +133,15 @@ export default function ListItem({
   const softDrop = "0 1px 2px rgba(0,0,0,0.04)";
 
   // ----- Swipe state -----
-  const [dragX, setDragX] = useState(0); // current horizontal drag px
+  const [dragX, setDragX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
-  const [showUndo, setShowUndo] = useState(false);
-  const [isCollapsing, setIsCollapsing] = useState(false);
-  const collapseTimerRef = useRef<number | null>(null);
 
-  // Thresholds
-  const CONFIRM_X = 72; // px needed to trigger action
-  const MAX_TRANSLATE = 96; // visual cap
+  const CONFIRM_X = 72;
+  const MAX_TRANSLATE = 96;
 
-  // Trigger "in cart" -> done true, then collapse after short undo window
-  const confirmInCart = () => {
-    // Mark done in data model
-    onChange({ done: true });
-    setShowUndo(true);
-
-    // Start collapse after delay unless undone
-    if (collapseTimerRef.current) {
-      window.clearTimeout(collapseTimerRef.current);
-    }
-    collapseTimerRef.current = window.setTimeout(() => {
-      setIsCollapsing(true);
-    }, 1200);
-  };
-
-  // Undo action
-  const undo = () => {
-    if (collapseTimerRef.current) {
-      window.clearTimeout(collapseTimerRef.current);
-      collapseTimerRef.current = null;
-    }
-    setShowUndo(false);
-    setIsCollapsing(false);
-    // Only revert if actually set to done
-    if (item.done) onChange({ done: false });
-  };
-
-  useEffect(() => {
-    return () => {
-      if (collapseTimerRef.current)
-        window.clearTimeout(collapseTimerRef.current);
-    };
-  }, []);
-
-  // Configure swipe handlers
   const handlers = useSwipeable({
     onSwiping: (e) => {
       setIsSwiping(true);
-      // Clamp translation for smoothness
       const clamped =
         e.deltaX > 0
           ? Math.min(e.deltaX, MAX_TRANSLATE)
@@ -195,56 +150,32 @@ export default function ListItem({
     },
     onSwiped: (e) => {
       setIsSwiping(false);
-
-      // Right swipe strong enough => confirm in cart
       if (e.dir === "Right" && e.absX >= CONFIRM_X) {
         setDragX(0);
-        confirmInCart();
+        // Move item into "In cart" (done bucket). Undo happens in List's done section.
+        onChange({ done: true });
         return;
       }
-
-      // Left swipe strong enough => show quick "skip" flash (visual only)
-      if (e.dir === "Left" && e.absX >= CONFIRM_X) {
-        // visual snap-back, no state change yet
-        setDragX(0);
-        return;
-      }
-
-      // Otherwise snap back
       setDragX(0);
     },
-    trackMouse: true, // enable mouse drag on desktop
+    trackMouse: true,
     preventScrollOnSwipe: true,
   });
 
-  // Visual background color & icon depending on drag direction
   const dragDir = dragX === 0 ? "none" : dragX > 0 ? "right" : "left";
   const swipeBg =
     dragDir === "right"
-      ? "rgba(16,185,129,0.15)" // green-ish
+      ? "rgba(16,185,129,0.15)" // green-ish for "in cart"
       : dragDir === "left"
-      ? "rgba(234,179,8,0.15)" // amber-ish
+      ? "rgba(234,179,8,0.15)" // amber-ish for "later"
       : "transparent";
 
   const qtyId = `qty-${item.id}`;
 
-  // Row wrapper classes for collapse animation
-  // Technique: animate max-height + opacity + margin for smooth collapse
-  const liClasses = [
-    "p-2 transition-all duration-300",
-    isCollapsing
-      ? "max-h-0 opacity-0 my-0 py-0"
-      : "max-h-[500px] opacity-100 my-2",
-  ].join(" ");
-
   return (
-    <li className={liClasses}>
-      {/* Swipe background layer */}
-      <div
-        className="relative rounded-2xl overflow-hidden"
-        {...handlers}
-        // Padding wrapper ensures background covers full width
-      >
+    <li className="p-2">
+      <div className="relative rounded-2xl overflow-hidden" {...handlers}>
+        {/* Swipe background layer */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: swipeBg }}
@@ -258,7 +189,6 @@ export default function ListItem({
             }}
             aria-hidden
           >
-            {/* simple cart icon using emoji as placeholder; swap with proper svg if you like */}
             <span className="text-2xl">🛒</span>
           </div>
           {/* Left swipe icon (clock) */}
@@ -276,7 +206,7 @@ export default function ListItem({
 
         {/* Foreground card that translates with finger */}
         <div
-          className="relative flex flex-col gap-3 rounded-2xl border shadow-sm p-3 hover:shadow-md transition-[box-shadow,transform] will-change-transform bg-white"
+          className="relative flex flex-col gap-3 rounded-2xl border shadow-sm p-3 hover:shadow-md transition-[box-shadow,transform] will-change-transform"
           style={{
             transform:
               isSwiping || dragX !== 0
@@ -290,7 +220,6 @@ export default function ListItem({
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              {/* Name (kept simple; expand/collapse removed for stability while swiping) */}
               <div
                 className="text-left font-semibold text-lg min-w-0 truncate"
                 title={item.name}
@@ -312,9 +241,9 @@ export default function ListItem({
                 }}
                 title={categoryLabel}
               >
-                {iconSrc ? (
+                {CATEGORY_ICON_BY_LABEL[categoryLabel] ? (
                   <img
-                    src={iconSrc}
+                    src={CATEGORY_ICON_BY_LABEL[categoryLabel]}
                     alt=""
                     className="h-4 w-4 object-contain"
                     draggable={false}
@@ -348,8 +277,7 @@ export default function ListItem({
               <div className="sm:flex sm:justify-center">
                 <div
                   className="inline-flex sm:w-full sm:max-w-60 items-stretch rounded-full border border-black/10 bg-white overflow-hidden
-                   transition focus-within:border-[hsl(var(--accent))]
-                   focus-within:ring-2 focus-within:ring-[hsl(var(--accent))/0.35]"
+                   transition focus-within:border-[hsl(var(--accent))] focus-within:ring-2 focus-within:ring-[hsl(var(--accent))/0.35]"
                 >
                   <button
                     type="button"
@@ -433,22 +361,6 @@ export default function ListItem({
               </select>
             </label>
           </div>
-
-          {/* Inline Undo snackbar (appears after right-swipe) */}
-          {showUndo && (
-            <div className="mt-1">
-              <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm shadow-sm border border-black/10 bg-white">
-                <span>„Im Wagen“ gesetzt</span>
-                <button
-                  type="button"
-                  className="underline underline-offset-2"
-                  onClick={undo}
-                >
-                  Rückgängig
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </li>
