@@ -1,84 +1,66 @@
 // src/components/CompactRow.tsx
-// Presentational compact row for "Later" and "In cart" buckets.
-// No <li> wrapper inside — parent list controls motion/layout.
-// English comments by request.
+// Compact list row used in Later / In cart sections.
+// - Left: item name + meta (qty/unit · category)
+// - Right: primary action pill + TrashButton for delete
+// - All labels in English; UI-only component.
 
-import type { Item } from "./ListItem";
+import TrashButton from "./ui/TrashButton";
 import type { CategoryLabel } from "../constants/categories";
-import { CATEGORY_ICON_BY_LABEL } from "../constants/categories";
+import type { Item } from "./ListItem";
 
-export type CompactRowProps = {
+type CompactRowProps = {
   item: Item;
-  color: string;
-  primaryActionLabel: string; // e.g., "Move to Open" or "Undo"
+  color: string; // HSL string used to tint the left accent (optional in this layout)
+  primaryActionLabel: string;
   onPrimaryAction: () => void;
   onDelete?: (id: string) => void;
 };
 
+function metaLine(item: Item): string {
+  // Build "1 pack · Frozen" like string if data exists
+  const qty =
+    item.amount != null
+      ? `${item.amount}${item.unit ? ` ${item.unit}` : ""}`
+      : null;
+  const cat: CategoryLabel | undefined = item.category;
+  if (qty && cat) return `${qty} · ${cat}`;
+  if (qty) return qty;
+  if (cat) return `${cat}`;
+  return "";
+}
+
 export default function CompactRow({
   item,
-  color,
   primaryActionLabel,
   onPrimaryAction,
   onDelete,
 }: CompactRowProps) {
-  const category: CategoryLabel = item.category ?? "Default";
-  const iconSrc = CATEGORY_ICON_BY_LABEL[category];
-
   return (
-    <div
-      className="flex items-center justify-between gap-3 rounded-xl border bg-white p-3"
-      style={{
-        borderColor: "rgba(0,0,0,0.12)",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <span
-          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-          style={{ backgroundColor: color, opacity: 0.2 }}
-          aria-hidden
-        >
-          {iconSrc ? (
-            <img
-              src={iconSrc}
-              alt=""
-              className="h-4 w-4 object-contain opacity-80"
-            />
-          ) : (
-            <span className="h-3 w-3 rounded-full bg-black/20 inline-block" />
-          )}
-        </span>
-
-        <div className="min-w-0">
-          <div className="font-medium truncate">{item.name}</div>
-          <div className="text-xs text-slate-500">
-            {item.amount ?? "–"} {item.unit ?? ""}
-            {category !== "Default" ? ` · ${category}` : ""}
-          </div>
-        </div>
+    <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white/70 px-4 py-3 shadow-sm">
+      {/* Left: name + meta */}
+      <div className="min-w-0">
+        <div className="font-semibold truncate">{item.name}</div>
+        <div className="text-sm text-slate-500 truncate">{metaLine(item)}</div>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Right: actions */}
+      <div className="ml-3 flex flex-none items-center gap-2">
         <button
           type="button"
+          className="rounded-full border border-black/10 px-4 py-1.5 text-sm shadow-sm hover:bg-white"
           onClick={onPrimaryAction}
-          className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
+          aria-label={primaryActionLabel}
           title={primaryActionLabel}
         >
           {primaryActionLabel}
         </button>
 
-        {onDelete && (
-          <button
-            type="button"
-            onClick={() => onDelete(item.id)}
-            className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
-            title="Delete item"
-          >
-            Delete
-          </button>
-        )}
+        {/* TrashButton component */}
+        <TrashButton
+          onClick={() => onDelete?.(item.id)}
+          title="Delete item"
+          ariaLabel="Delete item"
+        />
       </div>
     </div>
   );
