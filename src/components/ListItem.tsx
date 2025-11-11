@@ -17,7 +17,7 @@ import TrashButton from "./ui/TrashButton";
 export type Item = {
   id: string;
   name: string;
-  done: boolean;
+  done: boolean; // bleibt im Typ, wird hier aber nicht genutzt
   amount?: number;
   unit?: Unit;
   category?: CategoryLabel;
@@ -25,7 +25,7 @@ export type Item = {
 
 type ListItemProps = {
   item: Item;
-  onToggle: (id: string) => void;
+  onToggle: (id: string) => void; // bleibt für Parent-Kompatibilität, UNUSED
   onChange: (patch: Partial<Item>) => void;
   onDelete?: (id: string) => void;
   color: string;
@@ -57,7 +57,6 @@ function alphaTint(input: string, alpha = 0.12): string {
 
 export default function ListItem({
   item,
-  onToggle,
   onChange,
   onDelete,
   color,
@@ -134,7 +133,7 @@ export default function ListItem({
   );
   const softDrop = "0 1px 2px rgba(0,0,0,0.04)";
 
-  // --- NEW: tap-to-expand for long names ---
+  // --- Tap-to-expand for long names (optional) ---
   const [showFullName, setShowFullName] = useState(false);
 
   return (
@@ -150,16 +149,7 @@ export default function ListItem({
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <input
-              type="checkbox"
-              className="h-5 w-5 rounded-md border border-black/20"
-              checked={item.done}
-              onChange={() => onToggle(item.id)}
-              aria-label={`Mark ${item.name} as ${
-                item.done ? "not done" : "done"
-              }`}
-              style={{ accentColor: effectiveColor }}
-            />
+            {/* (Checkbox entfernt) */}
 
             {/* Name: tap to expand/collapse */}
             <button
@@ -170,7 +160,6 @@ export default function ListItem({
                 showFullName
                   ? "whitespace-normal wrap-break-words max-h-28 overflow-y-auto pr-1"
                   : "truncate",
-                item.done ? "line-through text-black/45" : "",
               ].join(" ")}
               title={item.name}
               aria-expanded={showFullName}
