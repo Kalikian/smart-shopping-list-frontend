@@ -14,16 +14,24 @@ import MyListsDialog from "./components/MyListsDialog";
 import type { Item } from "./components/ListItem";
 import type { CategoryLabel } from "./constants/categories";
 import { getColorVarForCategory } from "./constants/categories";
+import {
+  ADD_EVENT,
+  type AddItemInlineSubmit,
+} from "./components/AddItemInline";
 
-// NOTE: If your TS setup doesn't auto-resolve barrels, keep the /index suffix.
 import {
   loadSnapshot,
   saveSnapshot,
   toggleItem,
   updateItem,
+  addItem as addItemStore,
   removeItem as removeItemStore,
   type ListSnapshot,
 } from "./data/listStore/index";
+
+function newItemId() {
+  return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
 
 export default function App() {
   // Load snapshot if one exists; do NOT auto-create.
@@ -65,6 +73,25 @@ export default function App() {
     [list]
   );
 
+  const handleAdd = useCallback(
+    (draft: AddItemInlineSubmit) => {
+      if (!list) return;
+      // Map composer payload to Item shape
+      const item: Item = {
+        id: newItemId(),
+        name: draft.name,
+        amount: draft.amount,
+        unit: draft.unit,
+        category: draft.category,
+        done: false,
+        snoozed: false,
+      } as Item;
+      const snap = addItemStore(item);
+      setList(snap);
+    },
+    [list]
+  );
+
   const handleDelete = useCallback(
     (id: string) => {
       if (!list) return;
@@ -86,14 +113,17 @@ export default function App() {
     []
   );
 
+  // FAB: open/focus inline composer by dispatching the global event
+  const handleFabClick = useCallback(() => {
+    window.dispatchEvent(new Event(ADD_EVENT));
+  }, []);
+
   return (
     <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
       <AppHeader open={open} total={total} />
-
       <div className="mx-auto max-w-screen-sm safe-x">
         <ThemeSwitcher />
       </div>
-
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
         <HeroCard
           onCreateNew={handleCreateNew}
@@ -116,22 +146,21 @@ export default function App() {
               onChange={handlePatch}
               onDelete={handleDelete}
               getColorForCategory={getColorForCategory}
+              onAdd={handleAdd}
             />
           </section>
         )}
 
         <FeatureTiles />
       </main>
-
-      <Fab title="Add item" />
-
+      <Fab title="Add item" onClick={handleFabClick} /> {/* <-- wire FAB */}
+      {/* If your Fab component didn't accept onClick yet, add it there: props {title, onClick?} */}
       {/* --- Modals --- */}
       <CreateListDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={(snap) => setList(snap)}
       />
-
       <MyListsDialog
         open={myListsOpen}
         onClose={() => setMyListsOpen(false)}

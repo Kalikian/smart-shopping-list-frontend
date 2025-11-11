@@ -1,16 +1,16 @@
 // src/components/Fab.tsx
+import { ADD_EVENT } from "./AddItemInline";
+
 type FabProps = {
   /** Disable interactions (also sets aria-disabled) */
   disabled?: boolean;
   /** Tooltip / title attribute */
   title?: string;
-  /** Click handler (optional) */
+  /** Click handler (optional). If not provided, a global ADD_EVENT is dispatched. */
   onClick?: () => void;
   /** Optional loading flag for future use (aria-busy) */
   loading?: boolean;
 };
-
-const ADD_EVENT = "app:add-item"; // Event name used across app
 
 export default function Fab({
   disabled = false,
@@ -26,8 +26,8 @@ export default function Fab({
     if (onClick) {
       onClick();
     } else {
-      // Fire-and-forget signal to open inline composer
-      window.dispatchEvent(new CustomEvent(ADD_EVENT));
+      // Fire-and-forget signal to open inline composer (handled in AddItemInline)
+      window.dispatchEvent(new Event(ADD_EVENT));
     }
   };
 

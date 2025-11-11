@@ -7,6 +7,7 @@ import ListItem, { type Item } from "./ListItem";
 import type { CategoryLabel } from "../constants/categories";
 import { CATEGORY_ICON_BY_LABEL } from "../constants/categories";
 import { sortItemsByCategory } from "../utils/sortItems";
+import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 
 type ListProps = {
   items: Item[];
@@ -14,6 +15,7 @@ type ListProps = {
   onChange: (id: string, patch: Partial<Item>) => void;
   onDelete?: (id: string) => void;
   getColorForCategory: (c: CategoryLabel) => string;
+  onAdd?: (payload: AddItemInlineSubmit) => void; // inline composer (optional)
 };
 
 const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
@@ -24,6 +26,7 @@ export default function List({
   onChange,
   onDelete,
   getColorForCategory,
+  onAdd, // <-- added back
 }: ListProps) {
   // Single source of truth: sort once, then split into buckets
   const sorted = useMemo(() => sortItemsByCategory(items), [items]);
@@ -64,6 +67,13 @@ export default function List({
           {showDone ? "Hide in cart" : `Show in cart (${doneItems.length})`}
         </button>
       </header>
+
+      {/* Inline Add composer (only if onAdd provided) */}
+      {onAdd && (
+        <div id="add-composer" className="mb-3">
+          <AddItemInline onSubmit={onAdd} inputId="add-item-name" />
+        </div>
+      )}
 
       {/* OPEN ITEMS */}
       <ul>

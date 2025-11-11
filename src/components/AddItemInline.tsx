@@ -18,6 +18,8 @@ export type AddItemInlineSubmit = {
 type Props = {
   onSubmit: (data: AddItemInlineSubmit) => void;
   title?: string;
+  /** Optional DOM id for the name input (used by FAB to focus) */
+  inputId?: string;
 };
 
 const INTEGER_UNITS = new Set<Unit>(["pcs", "pack", "g", "mL"]);
@@ -38,9 +40,14 @@ function amountAttributesFor(unit: Unit) {
   return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
 }
 
-const ADD_EVENT = "app:add-item"; // Must match Fab
+/** Global event name listened by the inline composer and fired by the FAB */
+export const ADD_EVENT = "app:add-item";
 
-export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
+export default function AddItemInline({
+  onSubmit,
+  title = "Add item",
+  inputId,
+}: Props) {
   // Collapsed vs expanded
   const [open, setOpen] = useState(false);
 
@@ -61,15 +68,12 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
 
   // Listen to FAB "add item" event and open the inline composer
   useEffect(() => {
-    // Handler: open (or refocus) the composer
     const handler = () => {
-      // If already open, just refocus to speed up entry
       if (open) {
         nameRef.current?.focus();
         return;
       }
       setOpen(true);
-      // Ensure focus after state update
       setTimeout(() => nameRef.current?.focus(), 0);
     };
 
@@ -166,6 +170,7 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
             Name *
           </label>
           <input
+            id={inputId ?? "add-item-name"}
             ref={nameRef}
             type="text"
             placeholder="e.g., Bananas"
