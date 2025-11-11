@@ -10,6 +10,8 @@ type FabProps = {
   loading?: boolean;
 };
 
+const ADD_EVENT = "app:add-item"; // Event name used across app
+
 export default function Fab({
   disabled = false,
   title = "Add item",
@@ -17,6 +19,17 @@ export default function Fab({
   loading = false,
 }: FabProps) {
   const isDisabled = disabled || loading;
+
+  // Unified click: prefer explicit handler, otherwise dispatch global event
+  const handleClick = () => {
+    if (isDisabled) return;
+    if (onClick) {
+      onClick();
+    } else {
+      // Fire-and-forget signal to open inline composer
+      window.dispatchEvent(new CustomEvent(ADD_EVENT));
+    }
+  };
 
   return (
     <button
@@ -27,7 +40,7 @@ export default function Fab({
       aria-busy={loading || undefined}
       aria-disabled={isDisabled || undefined}
       disabled={isDisabled}
-      onClick={isDisabled ? undefined : onClick}
+      onClick={handleClick}
     >
       ＋
     </button>

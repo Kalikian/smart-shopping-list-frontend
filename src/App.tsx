@@ -130,13 +130,7 @@ export default function App() {
         <FeatureTiles />
       </main>
 
-      <Fab
-        onClick={() => {
-          document
-            .querySelector("#current-list")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }}
-      />
+      <Fab title="Add item" />
 
       {/* --- Modals --- */}
       <CreateListDialog

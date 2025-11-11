@@ -1,11 +1,4 @@
 // src/components/AddItemInline.tsx
-// Inline "Add Item" composer that lives inside the list (no modal).
-// - Name is required; amount/unit/category have defaults.
-// - No duplicate 'Default' entries: selects are initialized to defaults.
-// - Dynamic amount precision: integer for some units (e.g., pcs, pack, g, mL),
-//   decimal for others (e.g., kg, L).
-// - Emits a normalized payload via onSubmit; parent persists the item.
-
 import { useEffect, useRef, useState } from "react";
 import {
   CATEGORIES,
@@ -17,8 +10,8 @@ import {
 
 export type AddItemInlineSubmit = {
   name: string;
-  amount: number;          // default 1, >= 1
-  unit: Unit;              // default UNITS[0]
+  amount: number; // default 1, >= 1
+  unit: Unit; // default UNITS[0]
   category: CategoryLabel; // default CATEGORY_DEFAULT
 };
 
@@ -27,20 +20,25 @@ type Props = {
   title?: string;
 };
 
-// Units: integers vs decimals
 const INTEGER_UNITS = new Set<Unit>(["pcs", "pack", "g", "mL"]);
 const DECIMAL_UNITS = new Set<Unit>(["kg", "L"]);
 
-// Derive numeric input attributes based on unit
+// Determine numeric input attributes based on unit
 function amountAttributesFor(unit: Unit) {
   if (INTEGER_UNITS.has(unit)) {
     return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
   }
   if (DECIMAL_UNITS.has(unit)) {
-    return { step: 0.1, inputMode: "decimal" as const, pattern: undefined as string | undefined };
+    return {
+      step: 0.1,
+      inputMode: "decimal" as const,
+      pattern: undefined as string | undefined,
+    };
   }
   return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
 }
+
+const ADD_EVENT = "app:add-item"; // Must match Fab
 
 export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
   // Collapsed vs expanded
@@ -59,6 +57,25 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
     if (!open) return;
     const id = window.setTimeout(() => nameRef.current?.focus(), 0);
     return () => window.clearTimeout(id);
+  }, [open]);
+
+  // Listen to FAB "add item" event and open the inline composer
+  useEffect(() => {
+    // Handler: open (or refocus) the composer
+    const handler = () => {
+      // If already open, just refocus to speed up entry
+      if (open) {
+        nameRef.current?.focus();
+        return;
+      }
+      setOpen(true);
+      // Ensure focus after state update
+      setTimeout(() => nameRef.current?.focus(), 0);
+    };
+
+    window.addEventListener(ADD_EVENT, handler as EventListener);
+    return () =>
+      window.removeEventListener(ADD_EVENT, handler as EventListener);
   }, [open]);
 
   const canSubmit = name.trim().length > 0;
@@ -145,7 +162,9 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         {/* Name (required) */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Name *</label>
+          <label className="block text-xs font-medium text-slate-600">
+            Name *
+          </label>
           <input
             ref={nameRef}
             type="text"
@@ -158,7 +177,9 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
 
         {/* Amount (dynamic precision) */}
         <div>
-          <label className="block text-xs font-medium text-slate-600">Amount</label>
+          <label className="block text-xs font-medium text-slate-600">
+            Amount
+          </label>
           <input
             type="number"
             min={1}
@@ -174,7 +195,9 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
 
         {/* Unit */}
         <div>
-          <label className="block text-xs font-medium text-slate-600">Unit</label>
+          <label className="block text-xs font-medium text-slate-600">
+            Unit
+          </label>
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value as Unit)}
@@ -190,7 +213,9 @@ export default function AddItemInline({ onSubmit, title = "Add item" }: Props) {
 
         {/* Category */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Category</label>
+          <label className="block text-xs font-medium text-slate-600">
+            Category
+          </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as CategoryLabel)}
