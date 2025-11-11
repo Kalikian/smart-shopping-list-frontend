@@ -4,7 +4,7 @@
 // - XS: stacked fields; SM+: three columns (one row)
 // - Custom +/- stepper (no native spinners)
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   CATEGORY_ICON_BY_LABEL,
   CATEGORIES,
@@ -134,6 +134,9 @@ export default function ListItem({
   );
   const softDrop = "0 1px 2px rgba(0,0,0,0.04)";
 
+  // --- NEW: tap-to-expand for long names ---
+  const [showFullName, setShowFullName] = useState(false);
+
   return (
     <li className="p-2">
       <div
@@ -146,7 +149,7 @@ export default function ListItem({
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <input
               type="checkbox"
               className="h-5 w-5 rounded-md border border-black/20"
@@ -157,14 +160,24 @@ export default function ListItem({
               }`}
               style={{ accentColor: effectiveColor }}
             />
-            <div
-              className={`font-semibold text-lg truncate ${
-                item.done ? "line-through text-black/45" : ""
-              }`}
+
+            {/* Name: tap to expand/collapse */}
+            <button
+              type="button"
+              onClick={() => setShowFullName((v) => !v)}
+              className={[
+                "text-left font-semibold text-lg min-w-0",
+                showFullName
+                  ? "whitespace-normal wrap-break-words max-h-28 overflow-y-auto pr-1"
+                  : "truncate",
+                item.done ? "line-through text-black/45" : "",
+              ].join(" ")}
               title={item.name}
+              aria-expanded={showFullName}
+              aria-label={showFullName ? "Collapse name" : "Expand name"}
             >
               {item.name}
-            </div>
+            </button>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
