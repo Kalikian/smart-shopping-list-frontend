@@ -1,8 +1,8 @@
 // src/components/ListItem.tsx
 // Uniform field labels for clean alignment on small screens.
-// - Each control has a label (Qty, Unit, Category)
-// - XS: stacked fields; SM+: three columns (one row)
+// - XS: stacked; SM+: three columns
 // - Custom +/- stepper (no native spinners)
+// - Checkbox removed; onToggle kept in props but unused.
 
 import { useMemo, useState } from "react";
 import {
@@ -17,7 +17,7 @@ import TrashButton from "./ui/TrashButton";
 export type Item = {
   id: string;
   name: string;
-  done: boolean; // bleibt im Typ, wird hier aber nicht genutzt
+  done: boolean; // kept but unused here
   amount?: number;
   unit?: Unit;
   category?: CategoryLabel;
@@ -25,7 +25,7 @@ export type Item = {
 
 type ListItemProps = {
   item: Item;
-  onToggle: (id: string) => void; // bleibt für Parent-Kompatibilität, UNUSED
+  onToggle: (id: string) => void; // unused
   onChange: (patch: Partial<Item>) => void;
   onDelete?: (id: string) => void;
   color: string;
@@ -133,8 +133,11 @@ export default function ListItem({
   );
   const softDrop = "0 1px 2px rgba(0,0,0,0.04)";
 
-  // --- Tap-to-expand for long names (optional) ---
+  // Long-name expand/collapse
   const [showFullName, setShowFullName] = useState(false);
+
+  // Id für das Quantity-Input (Label-Klick nur auf Input, nicht Minus-Button)
+  const qtyId = `qty-${item.id}`;
 
   return (
     <li className="p-2">
@@ -149,8 +152,6 @@ export default function ListItem({
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {/* (Checkbox entfernt) */}
-
             {/* Name: tap to expand/collapse */}
             <button
               type="button"
@@ -206,15 +207,16 @@ export default function ListItem({
 
         {/* Details with uniform labels */}
         <div className="grid grid-cols-1 gap-3 w-full sm:flex sm:items-start sm:gap-4">
-          {/* Qty */}
-          <label className="block sm:basis-0 sm:flex-1">
-            <span className="block text-xs font-medium text-slate-500 mb-1">
+          {/* Qty (FIX: kein Label-Wrapper um Buttons + Input) */}
+          <div className="block sm:basis-0 sm:flex-1">
+            <label
+              htmlFor={qtyId}
+              className="block text-xs font-medium text-slate-500 mb-1"
+            >
               Qty
-            </span>
+            </label>
 
-            {/* center on larger screens */}
             <div className="sm:flex sm:justify-center">
-              {/* outer container with theme-based focus highlight */}
               <div
                 className="inline-flex sm:w-full sm:max-w-60 items-stretch rounded-full border border-black/10 bg-white overflow-hidden
                  transition focus-within:border-[hsl(var(--accent))]
@@ -231,6 +233,7 @@ export default function ListItem({
                 </button>
 
                 <input
+                  id={qtyId}
                   type="text"
                   inputMode={isDecimal ? "decimal" : "numeric"}
                   onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
@@ -252,7 +255,7 @@ export default function ListItem({
                 </button>
               </div>
             </div>
-          </label>
+          </div>
 
           {/* Unit */}
           <label className="block sm:basis-0 sm:flex-1">
