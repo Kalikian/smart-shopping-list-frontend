@@ -1,11 +1,14 @@
 // src/components/List.tsx
 // List section with header counters, category-based colors, and inline add-composer.
 // - Prop-based API (items/onToggle/onChange/onAdd/onDelete)
+// - Renders items sorted by Category (CATEGORIES order) -> Name (A–Z).
 // - Forwards optional onDelete to ListItem so a Delete button appears per row.
 
 import ListItem, { type Item } from "./ListItem";
 import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 import type { CategoryLabel } from "../constants/categories";
+import { useMemo } from "react";
+import { sortItemsByCategory } from "../utils/sortItems";
 
 // Neutral gray fallback: uses --cat-neutral if defined, else medium gray.
 const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
@@ -40,9 +43,21 @@ type ListProps = {
   onDelete?: (id: string) => void;
 };
 
-export default function List({ items, onToggle, onChange, onAdd, onDelete }: ListProps) {
-  const total: number = items.length;
-  const done: number = items.filter((i: Item) => i.done).length;
+export default function List({
+  items,
+  onToggle,
+  onChange,
+  onAdd,
+  onDelete,
+}: ListProps) {
+  // Stable, view-only sorted snapshot for rendering
+  const sortedItems = useMemo(() => sortItemsByCategory(items), [items]);
+
+  const total: number = sortedItems.length;
+  const done: number = useMemo(
+    () => sortedItems.filter((i) => i.done).length,
+    [sortedItems]
+  );
 
   // Map composer payload -> parent draft shape
   const handleAddSubmit = (data: AddItemInlineSubmit) => {
@@ -57,7 +72,10 @@ export default function List({ items, onToggle, onChange, onAdd, onDelete }: Lis
   };
 
   return (
-    <section className="mt-5 card p-0 overflow-hidden border border-black/10">
+    <section
+      id="current-list" // keep anchor id for potential use; no scroll logic tied here
+      className="mt-5 card p-0 overflow-hidden border border-black/10"
+    >
       <header
         className="px-4 py-3 border-b border-black/10"
         style={{
@@ -75,7 +93,7 @@ export default function List({ items, onToggle, onChange, onAdd, onDelete }: Lis
       <AddItemInline onSubmit={handleAddSubmit} title="Add item" />
 
       <ul className="divide-y divide-black/5">
-        {items.map((it: Item) => (
+        {sortedItems.map((it) => (
           <ListItem
             key={it.id}
             item={it}
