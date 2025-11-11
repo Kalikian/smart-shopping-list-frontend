@@ -1,13 +1,15 @@
 // src/components/List.tsx
 // Open (N) + collapsible Later (K) + collapsible In cart (M) with per-item Undo.
-// Uses shared utils/sortItems to keep ordering stable across state changes (incl. Undo).
+// UI upgrade: FLIP layout animations on <motion.li>, no motion.ul.
 
 import { useMemo, useState } from "react";
 import ListItem, { type Item } from "./ListItem";
 import type { CategoryLabel } from "../constants/categories";
-import { CATEGORY_ICON_BY_LABEL } from "../constants/categories";
 import { sortItemsByCategory } from "../utils/sortItems";
 import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
+import CompactRow from "./CompactRow";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { Transition } from "framer-motion";
 
 type ListProps = {
   items: Item[];
@@ -21,13 +23,15 @@ type ListProps = {
 const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
 
 export default function List({
-  items,
+  items = [],
   onToggle,
   onChange,
   onDelete,
   getColorForCategory,
-  onAdd, // <-- added back
+  onAdd,
 }: ListProps) {
+  const reduceMotion = useReducedMotion();
+
   // Single source of truth: sort once, then split into buckets
   const sorted = useMemo(() => sortItemsByCategory(items), [items]);
 
@@ -49,6 +53,15 @@ export default function List({
   const colorFor = (c: CategoryLabel) =>
     c === "Default" ? NEUTRAL : getColorForCategory(c);
 
+  // Shared transitions (typed)
+  const SPRING_ROW: Transition = {
+    type: "spring",
+    stiffness: 520,
+    damping: 40,
+    mass: 0.6,
+  };
+  const INSTANT: Transition = { duration: 0 };
+
   return (
     <section className="space-y-4">
       {/* Header: Open */}
@@ -57,7 +70,7 @@ export default function List({
           Open <span className="text-slate-500">({openItems.length})</span>
         </h2>
 
-        {/* Quick toggle for "In cart" (later has its own section toggle below) */}
+        {/* Quick toggle for "In cart" */}
         <button
           type="button"
           onClick={() => setShowDone((v) => !v)}
@@ -75,25 +88,42 @@ export default function List({
         </div>
       )}
 
-      {/* OPEN ITEMS */}
+      {/* OPEN ITEMS (animated reorder + enter/exit) */}
       <ul>
-        {openItems.map((it) => (
-          <ListItem
-            key={it.id}
-            item={it}
-            onToggle={onToggle ?? (() => {})}
-            onChange={(patch) => onChange(it.id, patch)}
-            onDelete={onDelete}
-            color={colorFor(it.category ?? "Default")}
-          />
-        ))}
+        <AnimatePresence initial={false}>
+          {openItems.map((it) => (
+            <motion.li
+              key={it.id}
+              layout
+              exit={{ opacity: 0, height: 0, margin: 0 }}
+              transition={reduceMotion ? INSTANT : SPRING_ROW}
+              className="mb-2"
+            >
+              <ListItem
+                item={it}
+                onToggle={onToggle ?? (() => {})}
+                onChange={(patch) => onChange(it.id, patch)}
+                onDelete={onDelete}
+                color={colorFor(it.category ?? "Default")}
+              />
+            </motion.li>
+          ))}
 
-        {openItems.length === 0 && (
-          <li className="p-3 text-sm text-slate-500">Nothing open.</li>
-        )}
+          {openItems.length === 0 && (
+            <motion.li
+              key="empty-open"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, height: 0, margin: 0 }}
+              className="p-3 text-sm text-slate-500"
+            >
+              Nothing open.
+            </motion.li>
+          )}
+        </AnimatePresence>
       </ul>
 
-      {/* LATER BUCKET (left-swipe) */}
+      {/* LATER BUCKET */}
       <div className="border-t border-black/10 pt-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">
@@ -109,26 +139,46 @@ export default function List({
           </button>
         </div>
 
-        {showLater && (
-          <ul className="mt-2 space-y-2">
-            {laterItems.length === 0 && (
-              <li className="p-3 text-sm text-slate-500">
-                Nothing parked for later.
-              </li>
-            )}
+        <AnimatePresence initial={false}>
+          {showLater && (
+            <motion.ul
+              key="later-list"
+              className="mt-2 space-y-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 420, damping: 36 }
+              }
+            >
+              {laterItems.length === 0 && (
+                <li className="p-3 text-sm text-slate-500">
+                  Nothing parked for later.
+                </li>
+              )}
 
-            {laterItems.map((it) => (
-              <CompactRow
-                key={it.id}
-                item={it}
-                color={colorFor(it.category ?? "Default")}
-                primaryActionLabel="Move to Open"
-                onPrimaryAction={() => onChange(it.id, { snoozed: false })}
-                onDelete={onDelete}
-              />
-            ))}
-          </ul>
-        )}
+              {laterItems.map((it) => (
+                <motion.li
+                  key={it.id}
+                  layout
+                  exit={{ opacity: 0, height: 0, margin: 0 }}
+                  transition={reduceMotion ? INSTANT : SPRING_ROW}
+                  className="p-2"
+                >
+                  <CompactRow
+                    item={it}
+                    color={colorFor(it.category ?? "Default")}
+                    primaryActionLabel="Move to Open"
+                    onPrimaryAction={() => onChange(it.id, { snoozed: false })}
+                    onDelete={onDelete}
+                  />
+                </motion.li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* IN CART (done) BUCKET */}
@@ -147,103 +197,47 @@ export default function List({
           </button>
         </div>
 
-        {showDone && (
-          <ul className="mt-2 space-y-2">
-            {doneItems.length === 0 && (
-              <li className="p-3 text-sm text-slate-500">No items in cart.</li>
-            )}
+        <AnimatePresence initial={false}>
+          {showDone && (
+            <motion.ul
+              key="done-list"
+              className="mt-2 space-y-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 420, damping: 36 }
+              }
+            >
+              {doneItems.length === 0 && (
+                <li className="p-3 text-sm text-slate-500">
+                  No items in cart.
+                </li>
+              )}
 
-            {doneItems.map((it) => (
-              <CompactRow
-                key={it.id}
-                item={it}
-                color={colorFor(it.category ?? "Default")}
-                primaryActionLabel="Undo"
-                onPrimaryAction={() => onChange(it.id, { done: false })}
-                onDelete={onDelete}
-              />
-            ))}
-          </ul>
-        )}
+              {doneItems.map((it) => (
+                <motion.li
+                  key={it.id}
+                  layout
+                  exit={{ opacity: 0, height: 0, margin: 0 }}
+                  transition={reduceMotion ? INSTANT : SPRING_ROW}
+                  className="p-2"
+                >
+                  <CompactRow
+                    item={it}
+                    color={colorFor(it.category ?? "Default")}
+                    primaryActionLabel="Undo"
+                    onPrimaryAction={() => onChange(it.id, { done: false })}
+                    onDelete={onDelete}
+                  />
+                </motion.li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
     </section>
-  );
-}
-
-/** Compact row component reused for Later and In cart buckets */
-function CompactRow({
-  item,
-  color,
-  primaryActionLabel,
-  onPrimaryAction,
-  onDelete,
-}: {
-  item: Item;
-  color: string;
-  primaryActionLabel: string; // "Move to Open" or "Undo"
-  onPrimaryAction: () => void;
-  onDelete?: (id: string) => void;
-}) {
-  const category: CategoryLabel = item.category ?? "Default";
-  const iconSrc = CATEGORY_ICON_BY_LABEL[category];
-
-  return (
-    <li className="p-2">
-      <div
-        className="flex items-center justify-between gap-3 rounded-xl border bg-white p-3"
-        style={{
-          borderColor: "rgba(0,0,0,0.12)",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-        }}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <span
-            className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: color, opacity: 0.2 }}
-            aria-hidden
-          >
-            {iconSrc ? (
-              <img
-                src={iconSrc}
-                alt=""
-                className="h-4 w-4 object-contain opacity-80"
-              />
-            ) : (
-              <span className="h-3 w-3 rounded-full bg-black/20 inline-block" />
-            )}
-          </span>
-
-          <div className="min-w-0">
-            <div className="font-medium truncate">{item.name}</div>
-            <div className="text-xs text-slate-500">
-              {item.amount ?? "–"} {item.unit ?? ""}
-              {category !== "Default" ? ` · ${category}` : ""}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onPrimaryAction}
-            className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
-            title={primaryActionLabel}
-          >
-            {primaryActionLabel}
-          </button>
-
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(item.id)}
-              className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
-              title="Delete item"
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      </div>
-    </li>
   );
 }
