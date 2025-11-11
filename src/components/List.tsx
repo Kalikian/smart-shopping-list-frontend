@@ -1,5 +1,5 @@
 // src/components/List.tsx
-// Open (N) + collapsible "In cart (M)" with per-item Undo (English labels).
+// Open (N) + collapsible Later (K) + collapsible In cart (M) with per-item Undo.
 // Uses shared utils/sortItems to keep ordering stable across state changes (incl. Undo).
 
 import { useMemo, useState } from "react";
@@ -25,11 +25,22 @@ export default function List({
   onDelete,
   getColorForCategory,
 }: ListProps) {
-  // Single source of truth: first sort, then split into open/done.
+  // Single source of truth: sort once, then split into buckets
   const sorted = useMemo(() => sortItemsByCategory(items), [items]);
-  const openItems = useMemo(() => sorted.filter((i) => !i.done), [sorted]);
+
+  // Buckets
+  const openItems = useMemo(
+    () => sorted.filter((i) => !i.done && !i.snoozed),
+    [sorted]
+  );
+  const laterItems = useMemo(
+    () => sorted.filter((i) => !i.done && i.snoozed),
+    [sorted]
+  );
   const doneItems = useMemo(() => sorted.filter((i) => i.done), [sorted]);
 
+  // Collapses
+  const [showLater, setShowLater] = useState(false);
   const [showDone, setShowDone] = useState(false);
 
   const colorFor = (c: CategoryLabel) =>
@@ -43,6 +54,7 @@ export default function List({
           Open <span className="text-slate-500">({openItems.length})</span>
         </h2>
 
+        {/* Quick toggle for "In cart" (later has its own section toggle below) */}
         <button
           type="button"
           onClick={() => setShowDone((v) => !v)}
@@ -71,7 +83,45 @@ export default function List({
         )}
       </ul>
 
-      {/* DONE BUCKET */}
+      {/* LATER BUCKET (left-swipe) */}
+      <div className="border-t border-black/10 pt-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">
+            Later <span className="text-slate-500">({laterItems.length})</span>
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowLater((v) => !v)}
+            className="text-sm underline underline-offset-2"
+            aria-expanded={showLater}
+          >
+            {showLater ? "Collapse" : "Show all"}
+          </button>
+        </div>
+
+        {showLater && (
+          <ul className="mt-2 space-y-2">
+            {laterItems.length === 0 && (
+              <li className="p-3 text-sm text-slate-500">
+                Nothing parked for later.
+              </li>
+            )}
+
+            {laterItems.map((it) => (
+              <CompactRow
+                key={it.id}
+                item={it}
+                color={colorFor(it.category ?? "Default")}
+                primaryActionLabel="Move to Open"
+                onPrimaryAction={() => onChange(it.id, { snoozed: false })}
+                onDelete={onDelete}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* IN CART (done) BUCKET */}
       <div className="border-t border-black/10 pt-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">
@@ -94,11 +144,12 @@ export default function List({
             )}
 
             {doneItems.map((it) => (
-              <DoneRow
+              <CompactRow
                 key={it.id}
                 item={it}
                 color={colorFor(it.category ?? "Default")}
-                onUndo={() => onChange(it.id, { done: false })}
+                primaryActionLabel="Undo"
+                onPrimaryAction={() => onChange(it.id, { done: false })}
                 onDelete={onDelete}
               />
             ))}
@@ -109,15 +160,18 @@ export default function List({
   );
 }
 
-function DoneRow({
+/** Compact row component reused for Later and In cart buckets */
+function CompactRow({
   item,
   color,
-  onUndo,
+  primaryActionLabel,
+  onPrimaryAction,
   onDelete,
 }: {
   item: Item;
   color: string;
-  onUndo: () => void;
+  primaryActionLabel: string; // "Move to Open" or "Undo"
+  onPrimaryAction: () => void;
   onDelete?: (id: string) => void;
 }) {
   const category: CategoryLabel = item.category ?? "Default";
@@ -161,11 +215,11 @@ function DoneRow({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onUndo}
+            onClick={onPrimaryAction}
             className="rounded-full px-3 py-1 text-sm border border-black/10 hover:bg-slate-50"
-            title="Move back to Open"
+            title={primaryActionLabel}
           >
-            Undo
+            {primaryActionLabel}
           </button>
 
           {onDelete && (

@@ -20,6 +20,7 @@ export type Item = {
   amount?: number;
   unit?: Unit;
   category?: CategoryLabel;
+  snoozed?: boolean;
 };
 
 type ListItemProps = {
@@ -150,10 +151,15 @@ export default function ListItem({
     },
     onSwiped: (e) => {
       setIsSwiping(false);
+
       if (e.dir === "Right" && e.absX >= CONFIRM_X) {
         setDragX(0);
-        // Move item into "In cart" (done bucket). Undo happens in List's done section.
-        onChange({ done: true });
+        onChange({ done: true }); // in cart
+        return;
+      }
+      if (e.dir === "Left" && e.absX >= CONFIRM_X) {
+        setDragX(0);
+        onChange({ snoozed: true }); // move to Later
         return;
       }
       setDragX(0);
