@@ -150,7 +150,6 @@ export default function App() {
             />
           </section>
         )}
-
         <FeatureTiles />
       </main>
       <Fab title="Add item" onClick={handleFabClick} /> {/* <-- wire FAB */}

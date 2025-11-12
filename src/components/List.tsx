@@ -132,7 +132,6 @@ export default function List({
     mass: 0.6,
   };
 
-  // Use a tuple or Easing type; strings like "easeInOut" may be disallowed by your typings
   const EASE_IN_OUT: Easing = [0.4, 0, 0.2, 1] as const;
 
   const SUCCESSOR_ROW_TWEEN: Transition = {
@@ -149,14 +148,14 @@ export default function List({
 
   return (
     <section className="space-y-4">
-      {/* Open header */}
+      {/* Header remains always */}
       <header className="flex items-center justify-between">
         <h2 className="text-base font-semibold">
           Remaining <span className="text-slate-500">({remaining})</span>
         </h2>
       </header>
 
-      {/* Inline Add */}
+      {/* Inline Add remains always */}
       {onAdd && (
         <div id="add-composer" className="mb-3">
           <AddItemInline onSubmit={onAdd} inputId="add-item-name" />
@@ -210,32 +209,25 @@ export default function List({
         title="Later"
         emptyText="Nothing parked for later."
         items={laterItems}
-        // animation flags from parent
         animateBucket={actionSource === "later"}
         animFromIdx={laterAnimFromIdx}
         setAnimFromIdx={setLaterAnimFromIdx}
-        // transitions
         sectionSpring={SECTION_SPRING_SOFT}
         successorTween={SUCCESSOR_ROW_TWEEN}
         instant={INSTANT}
         reduceMotion={!!reduceMotion}
-        // anchoring refs
         sectionRef={laterSectionRef}
         listRef={laterListRef}
-        // visuals & actions
         colorFor={colorFor}
         onPrimaryAction={(it) => {
           setActionSource("later");
-
           const anchorEl = laterSectionRef.current ?? laterListRef.current;
           const scroller = getScrollParent(anchorEl || null);
           anchorElRef.current = anchorEl || null;
           anchorScrollElRef.current = scroller;
           setAnchorTopBefore(getRelativeTop(anchorEl || null, scroller));
           setPreserveAnchorScroll(true);
-
-          // Move back to Open
-          onChange(it.id, { snoozed: false });
+          onChange(it.id, { snoozed: false }); // back to Open
         }}
         onDelete={onDelete}
       />
@@ -257,16 +249,13 @@ export default function List({
         colorFor={colorFor}
         onPrimaryAction={(it) => {
           setActionSource("done");
-
           const anchorEl = doneSectionRef.current ?? doneListRef.current;
           const scroller = getScrollParent(anchorEl || null);
           anchorElRef.current = anchorEl || null;
           anchorScrollElRef.current = scroller;
           setAnchorTopBefore(getRelativeTop(anchorEl || null, scroller));
           setPreserveAnchorScroll(true);
-
-          // Move back to Open
-          onChange(it.id, { done: false });
+          onChange(it.id, { done: false }); // back to Open
         }}
         onDelete={onDelete}
       />
