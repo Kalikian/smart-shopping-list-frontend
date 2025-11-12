@@ -15,7 +15,11 @@ type AppHeaderProps = {
   title?: string;
 };
 
-export default function AppHeader({ open, total, title = "Smart Shopping List" }: AppHeaderProps) {
+export default function AppHeader({
+  open,
+  total,
+  title = "Smart Shopping List",
+}: AppHeaderProps) {
   const done = Math.max(0, total - open);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 

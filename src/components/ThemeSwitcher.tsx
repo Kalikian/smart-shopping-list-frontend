@@ -43,7 +43,7 @@ export default function ThemeSwitcher() {
         "theme-mint": "Mint",
         "theme-paper": "Paper",
         "theme-candy": "Candy",
-      }) as Record<string, string>,
+      } as Record<string, string>),
     []
   );
 
