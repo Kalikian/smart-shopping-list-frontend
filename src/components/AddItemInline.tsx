@@ -15,17 +15,23 @@ export type AddItemInlineSubmit = {
   category: CategoryLabel; // default CATEGORY_DEFAULT
 };
 
-type Props = {
-  onSubmit: (data: AddItemInlineSubmit) => void;
+export type AddItemInlineProps = {
+  onSubmit: (payload: AddItemInlineSubmit) => void;
+  /** Optional: Cancel-Handler (sichtbarer Cancel-Button + anderes Verhalten) */
+  onCancel?: () => void;
+  /** Optional: Vorbelegung der Felder (Edit-Usecase) */
+  initial?: Partial<AddItemInlineSubmit>;
+  /** Optional: sofort geöffnet rendern (für Inline-Edit) */
+  forceOpen?: boolean;
+  /** Optional: UI-Titel (z.B. "Edit item") */
   title?: string;
-  /** Optional DOM id for the name input (used by FAB to focus) */
+  /** Optional: Name-Input-ID (Fokussteuerung via FAB) */
   inputId?: string;
 };
 
 const INTEGER_UNITS = new Set<Unit>(["pcs", "pack", "g", "mL"]);
 const DECIMAL_UNITS = new Set<Unit>(["kg", "L"]);
 
-// Determine numeric input attributes based on unit
 function amountAttributesFor(unit: Unit) {
   if (INTEGER_UNITS.has(unit)) {
     return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
@@ -45,19 +51,39 @@ export const ADD_EVENT = "app:add-item";
 
 export default function AddItemInline({
   onSubmit,
+  onCancel,
+  initial,
+  forceOpen = false,
   title = "Add item",
   inputId,
-}: Props) {
-  // Collapsed vs expanded
-  const [open, setOpen] = useState(false);
+}: AddItemInlineProps) {
+  // Detect edit mode by presence of initial/onCancel
+  const isEdit = Boolean(initial || onCancel);
 
-  // Form state
-  const [name, setName] = useState("");
-  const [amountStr, setAmountStr] = useState<string>("1");
-  const [unit, setUnit] = useState<Unit>(UNITS[0]);
-  const [category, setCategory] = useState<CategoryLabel>(CATEGORY_DEFAULT);
+  // Open state: open if forced or when initial is provided
+  const [open, setOpen] = useState<boolean>(forceOpen || Boolean(initial));
+
+  // Form state (seeded from `initial` or defaults)
+  const [name, setName] = useState<string>(initial?.name ?? "");
+  const [amountStr, setAmountStr] = useState<string>(
+    String(initial?.amount ?? 1)
+  );
+  const [unit, setUnit] = useState<Unit>(initial?.unit ?? UNITS[0]);
+  const [category, setCategory] = useState<CategoryLabel>(
+    initial?.category ?? CATEGORY_DEFAULT
+  );
 
   const nameRef = useRef<HTMLInputElement>(null);
+
+  // Re-seed when `initial` changes (e.g., edit anderer Eintrag)
+  useEffect(() => {
+    if (!initial) return;
+    setName(initial.name ?? "");
+    setAmountStr(String(initial.amount ?? 1));
+    setUnit(initial.unit ?? UNITS[0]);
+    setCategory(initial.category ?? CATEGORY_DEFAULT);
+    setOpen(true);
+  }, [initial]);
 
   // Focus name when expanding
   useEffect(() => {
@@ -66,8 +92,9 @@ export default function AddItemInline({
     return () => window.clearTimeout(id);
   }, [open]);
 
-  // Listen to FAB "add item" event and open the inline composer
+  // Listen to FAB event nur im "Add"-Modus (bei Edit steuern wir lokal)
   useEffect(() => {
+    if (isEdit) return; // kein FAB in Edit-Flow
     const handler = () => {
       if (open) {
         nameRef.current?.focus();
@@ -76,11 +103,10 @@ export default function AddItemInline({
       setOpen(true);
       setTimeout(() => nameRef.current?.focus(), 0);
     };
-
     window.addEventListener(ADD_EVENT, handler as EventListener);
     return () =>
       window.removeEventListener(ADD_EVENT, handler as EventListener);
-  }, [open]);
+  }, [open, isEdit]);
 
   const canSubmit = name.trim().length > 0;
   const amountAttrs = amountAttributesFor(unit);
@@ -111,7 +137,13 @@ export default function AddItemInline({
       category,
     });
 
-    // Reset for next quick entry
+    if (isEdit && onCancel) {
+      // In Edit-Flow schließt der Inline-Editor nach Save
+      onCancel();
+      return;
+    }
+
+    // Add-Flow: Reset für nächste Eingabe
     setName("");
     setAmountStr("1");
     setUnit(UNITS[0]);
@@ -128,7 +160,7 @@ export default function AddItemInline({
   };
 
   if (!open) {
-    // Collapsed pill
+    // Collapsed pill (nur im Add-Flow sinnvoll)
     return (
       <div className="px-4 pt-3 pb-2">
         <button
@@ -151,13 +183,16 @@ export default function AddItemInline({
       onKeyDown={onKeyDown}
     >
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-semibold">{title}</h4>
+        <h4 className="text-sm font-semibold">
+          {isEdit ? "Edit item" : title}
+        </h4>
+        {/* Close in Add-Flow = collapse; in Edit-Flow = Cancel */}
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={() => (isEdit && onCancel ? onCancel() : setOpen(false))}
           className="rounded-lg px-2 py-1 text-sm text-[hsl(var(--muted))] hover:bg-slate-50"
-          aria-label="Close"
-          title="Close"
+          aria-label={isEdit ? "Cancel" : "Close"}
+          title={isEdit ? "Cancel" : "Close"}
         >
           ×
         </button>
@@ -180,7 +215,7 @@ export default function AddItemInline({
           />
         </div>
 
-        {/* Amount (dynamic precision) */}
+        {/* Amount */}
         <div>
           <label className="block text-xs font-medium text-slate-600">
             Amount
@@ -242,21 +277,25 @@ export default function AddItemInline({
             disabled={!canSubmit}
             className="flex-1 rounded-xl bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] px-4 py-2 font-semibold hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Add
+            {isEdit ? "Save" : "Add"}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setName("");
-              setAmountStr("1");
-              setUnit(UNITS[0]);
-              setCategory(CATEGORY_DEFAULT);
-              nameRef.current?.focus();
-            }}
-            className="rounded-xl border border-[hsl(var(--border))] bg-white px-4 py-2 font-semibold hover:bg-slate-50"
-          >
-            Reset
-          </button>
+
+          {/* Reset nur sinnvoll im Add-Flow */}
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                setName("");
+                setAmountStr("1");
+                setUnit(UNITS[0]);
+                setCategory(CATEGORY_DEFAULT);
+                nameRef.current?.focus();
+              }}
+              className="rounded-xl border border-[hsl(var(--border))] bg-white px-4 py-2 font-semibold hover:bg-slate-50"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
     </div>

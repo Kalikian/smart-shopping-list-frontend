@@ -1,16 +1,13 @@
 // src/components/ListItem.tsx
-// Swipe-to-cart UX (right => done), left => snooze. Composition of lean sub-components.
+// Compact swipeable row with inline editor toggle.
 
 import { useMemo, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { type CategoryLabel, type Unit } from "../constants/categories";
 import TrashButton from "./ui/TrashButton";
-
-import QuantityField from "./list-item/QuantityField";
-import UnitSelect from "./list-item/UnitSelect";
-import CategorySelect from "./list-item/CategorySelect";
 import CategoryBadge from "./list-item/CategoryBadge";
 import { alphaTint } from "../utils/color";
+import EditItemInline from "./EditItemInline";
 
 export type Item = {
   id: string;
@@ -24,11 +21,53 @@ export type Item = {
 
 type ListItemProps = {
   item: Item;
-  onToggle: (id: string) => void; // kept for compatibility
+  onToggle?: (id: string) => void; // kept for compatibility
   onChange: (patch: Partial<Item>) => void;
   onDelete?: (id: string) => void;
-  color: string;
+  color: string; // category color token (e.g., "hsl(var(--cat-produce))")
 };
+
+// Neutral icon-only button (like TrashButton, but neutral)
+function IconButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="h-8 w-8 grid place-items-center rounded-md text-slate-700 hover:bg-black/5 active:bg-black/10"
+    >
+      {children}
+    </button>
+  );
+}
+
+// Tiny pencil SVG
+function EditIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      aria-hidden
+      {...props}
+    >
+      <path d="M12.7 3.3l4 4L7 17H3v-4l9.7-9.7z" />
+      <path d="M11 5l4 4" />
+    </svg>
+  );
+}
 
 export default function ListItem({
   item,
@@ -36,29 +75,23 @@ export default function ListItem({
   onDelete,
   color,
 }: ListItemProps) {
-  // --- Colors / tokens (kept local for visual cohesion) ---
+  const [editing, setEditing] = useState(false);
+
+  // --- Category / color tokens ------------------------------------------------
   const categoryLabel: CategoryLabel = item.category ?? "Default";
   const isDefault = categoryLabel === "Default";
   const effectiveColor = isDefault ? undefined : color;
 
   const bgTint = useMemo(
-    () => (isDefault ? "#ffffff" : alphaTint(effectiveColor!, 0.1)),
+    () => (isDefault ? "#fff" : alphaTint(effectiveColor!, 0.06)),
     [effectiveColor, isDefault]
   );
   const brdTint = useMemo(
-    () => (isDefault ? "rgba(0,0,0,0.12)" : alphaTint(effectiveColor!, 0.35)),
+    () => (isDefault ? "rgba(0,0,0,0.10)" : alphaTint(effectiveColor!, 0.22)),
     [effectiveColor, isDefault]
   );
-  const leftAccent = useMemo(
-    () =>
-      isDefault
-        ? "inset 0 0 0 0 transparent"
-        : `inset 6px 0 0 0 ${effectiveColor}`,
-    [effectiveColor, isDefault]
-  );
-  const softDrop = "0 1px 2px rgba(0,0,0,0.04)";
 
-  // --- Swipe state ---
+  // --- Swipe state ------------------------------------------------------------
   const [dragX, setDragX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const CONFIRM_X = 72;
@@ -66,6 +99,7 @@ export default function ListItem({
 
   const handlers = useSwipeable({
     onSwiping: (e) => {
+      if (editing) return; // disable swipe while editing
       setIsSwiping(true);
       const clamped =
         e.deltaX > 0
@@ -74,6 +108,7 @@ export default function ListItem({
       setDragX(clamped);
     },
     onSwiped: (e) => {
+      if (editing) return;
       setIsSwiping(false);
       if (e.dir === "Right" && e.absX >= CONFIRM_X) {
         setDragX(0);
@@ -99,64 +134,101 @@ export default function ListItem({
       ? "rgba(234,179,8,0.15)"
       : "transparent";
 
-  const qtyId = `qty-${item.id}`;
+  const qtyTxt =
+    typeof item.amount === "number" && !Number.isNaN(item.amount)
+      ? String(item.amount)
+      : "—";
+  const unitTxt = item.unit ?? "";
+
+  // --- Inline edit actions ----------------------------------------------------
+  const handleEditOpen = () => setEditing(true);
+  const handleEditCancel = () => setEditing(false);
+  const handleEditApply = (patch: Partial<Item>) => {
+    onChange(patch);
+    setEditing(false);
+  };
 
   return (
-    <li className="list-none marker:hidden p-2">
-      <div className="relative rounded-2xl overflow-hidden" {...handlers}>
-        {/* Swipe background */}
+    <li className="list-none marker:hidden px-2 py-1">
+      {/* When editing: render editor inline, same card container */}
+      {editing ? (
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ backgroundColor: swipeBg }}
+          className="rounded-xl border"
+          style={{ backgroundColor: "#fff", borderColor: brdTint }}
         >
-          <div
-            className="absolute inset-y-0 left-3 grid place-items-center"
-            style={{
-              opacity:
-                dragDir === "right" ? Math.min(1, Math.abs(dragX) / 60) : 0,
-            }}
-            aria-hidden
-          >
-            <span className="text-2xl">🛒</span>
-          </div>
-          <div
-            className="absolute inset-y-0 right-3 grid place-items-center"
-            style={{
-              opacity:
-                dragDir === "left" ? Math.min(1, Math.abs(dragX) / 60) : 0,
-            }}
-            aria-hidden
-          >
-            <span className="text-2xl">🕒</span>
+          <div className="p-2">
+            <EditItemInline
+              item={item}
+              onApply={handleEditApply}
+              onCancel={handleEditCancel}
+            />
           </div>
         </div>
+      ) : (
+        <div className="relative rounded-lg overflow-hidden" {...handlers}>
+          {/* Swipe background layer */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ backgroundColor: swipeBg }}
+          >
+            <div
+              className="absolute inset-y-0 left-3 grid place-items-center"
+              style={{
+                opacity:
+                  dragDir === "right" ? Math.min(1, Math.abs(dragX) / 60) : 0,
+              }}
+              aria-hidden
+            >
+              <span className="text-xl">✅</span>
+            </div>
+            <div
+              className="absolute inset-y-0 right-3 grid place-items-center"
+              style={{
+                opacity:
+                  dragDir === "left" ? Math.min(1, Math.abs(dragX) / 60) : 0,
+              }}
+              aria-hidden
+            >
+              <span className="text-xl">🕒</span>
+            </div>
+          </div>
 
-        {/* Foreground card */}
-        <div
-          className="relative flex flex-col gap-3 rounded-2xl border shadow-sm p-3 hover:shadow-md transition-[box-shadow,transform] will-change-transform"
-          style={{
-            transform:
-              isSwiping || dragX !== 0
-                ? `translateX(${dragX}px)`
-                : "translateX(0)",
-            backgroundColor: bgTint,
-            borderColor: brdTint,
-            boxShadow: isDefault ? softDrop : `${leftAccent}, ${softDrop}`,
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div
-                className="text-left font-semibold text-lg min-w-0 truncate"
-                title={item.name}
-              >
-                {item.name}
+          {/* Foreground row */}
+          <div
+            className="relative h-11 px-2 flex items-center justify-between gap-2 rounded-lg border transition-[box-shadow,transform] will-change-transform"
+            style={{
+              transform:
+                isSwiping || dragX !== 0
+                  ? `translateX(${dragX}px)`
+                  : "translateX(0)",
+              backgroundColor: bgTint,
+              borderColor: brdTint,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+            }}
+          >
+            {/* LEFT: Category logo + name/qty/unit */}
+            <div className="min-w-0 flex items-center gap-2">
+              <div className="shrink-0">
+                <CategoryBadge label={categoryLabel} color={effectiveColor} />
+              </div>
+              <div className="min-w-0 flex items-center gap-2 text-sm">
+                <span
+                  className="font-medium truncate max-w-[48vw]"
+                  title={item.name}
+                >
+                  {item.name}
+                </span>
+                <span className="text-slate-500">·</span>
+                <span className="tabular-nums text-slate-700">{qtyTxt}</span>
+                {unitTxt && <span className="text-slate-700">{unitTxt}</span>}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <CategoryBadge label={categoryLabel} color={effectiveColor} />
+            {/* RIGHT: Edit + Trash */}
+            <div className="flex items-center gap-1 shrink-0">
+              <IconButton label={`Edit ${item.name}`} onClick={handleEditOpen}>
+                <EditIcon />
+              </IconButton>
               {onDelete && (
                 <TrashButton
                   onClick={() => onDelete(item.id)}
@@ -165,26 +237,8 @@ export default function ListItem({
               )}
             </div>
           </div>
-
-          {/* Details */}
-          <div className="grid grid-cols-1 gap-3 w-full sm:flex sm:items-start sm:gap-4">
-            <QuantityField
-              id={qtyId}
-              amount={item.amount}
-              unit={item.unit}
-              onChange={(next) => onChange({ amount: next })}
-            />
-            <UnitSelect
-              value={item.unit}
-              onChange={(u) => onChange({ unit: u })}
-            />
-            <CategorySelect
-              value={categoryLabel}
-              onChange={(c) => onChange({ category: c })}
-            />
-          </div>
         </div>
-      </div>
+      )}
     </li>
   );
 }
