@@ -9,6 +9,8 @@ import TrashButton from "./ui/TrashButton";
 import CategoryBadge from "./list-item/CategoryBadge";
 import { alphaTint } from "../utils/color";
 import EditItemInline from "./EditItemInline";
+import IconButton from "./ui/IconButton";
+import EditIcon from "./ui/EditIcon";
 
 export type Item = {
   id: string;
@@ -27,47 +29,6 @@ type ListItemProps = {
   onDelete?: (id: string) => void;
   color: string;
 };
-
-// Larger neutral icon button for better tap targets
-function IconButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className="h-10 w-10 grid place-items-center rounded-md text-slate-800 hover:bg-black/5 active:bg-black/10"
-    >
-      {children}
-    </button>
-  );
-}
-
-function EditIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      aria-hidden
-      {...props}
-    >
-      <path d="M12.7 3.3l4 4L7 17H3v-4l9.7-9.7z" />
-      <path d="M11 5l4 4" />
-    </svg>
-  );
-}
 
 export default function ListItem({
   item,
@@ -215,7 +176,10 @@ export default function ListItem({
 
             {/* RIGHT */}
             <div className="flex items-center gap-2 shrink-0">
-              <IconButton label={`Edit ${item.name}`} onClick={handleEditOpen}>
+              <IconButton
+                aria-label={`Edit ${item.name}`}
+                onClick={handleEditOpen}
+              >
                 <EditIcon />
               </IconButton>
               {onDelete && (
