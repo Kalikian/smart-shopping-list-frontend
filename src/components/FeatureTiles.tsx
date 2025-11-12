@@ -1,44 +1,73 @@
 // src/components/FeatureTiles.tsx
-// Always-on feature tiles styled like the previous EmptyState cards.
-
-import React from "react";
-
-type Tile = {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  roadmap?: boolean;
-};
+// Footer tiles with concise UX guidance for swipe + undo.
+// - Keep visual style lightweight (white cards, subtle shadow/border)
+// - Accessible labels + clear arrow semantics
 
 export default function FeatureTiles() {
-  const data: Tile[] = [
-    { icon: "⚡", title: "Fast input", desc: "Add multiple items quickly." },
-    { icon: "🧭", title: "Smart grouping", desc: "Auto by aisle/category." },
-    { icon: "📶", title: "Offline later", desc: "PWA planned.", roadmap: true },
+  const tiles = [
+    {
+      icon: "⚡",
+      title: "Fast input",
+      desc: "Add multiple items quickly.",
+    },
+    {
+      icon: "🧭",
+      title: "Smart grouping",
+      desc: "Auto by aisle/category.",
+    },
+    {
+      icon: "🛒",
+      title: "Swipe to complete",
+      desc: (
+        <>
+          <span className="inline-block mr-1" aria-hidden>
+            ➜
+          </span>
+          <strong>Right</strong> = move to <em>In cart</em>.{" "}
+          <span className="inline-block ml-2 mr-1" aria-hidden>
+            ⇠
+          </span>
+          <strong>Left</strong> = move to <em>Later</em>.
+        </>
+      ),
+    },
+    {
+      icon: "↩️",
+      title: "Quick undo",
+      desc: (
+        <>
+          In <em>In cart</em> or <em>Later</em>: swipe <strong>right</strong> to
+          send back to <em>Open</em>.
+        </>
+      ),
+    },
+    {
+      icon: "✏️",
+      title: "Edit & delete",
+      desc: "Use the pencil to edit details, the bin to remove an item.",
+    },
   ];
 
   return (
-    <section className="mt-5 grid gap-3 sm:grid-cols-3">
-      {data.map((f) => (
-        <div
-          key={f.title}
-          className={[
-            // EmptyState look & feel:
-            "rounded-2xl border border-black/5 bg-white p-4 shadow-sm",
-            // Weaken roadmap/teaser tile:
-            f.roadmap ? "opacity-70 italic" : "",
-          ].join(" ")}
+    <section
+      aria-label="How it works"
+      className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {tiles.map((t) => (
+        <article
+          key={t.title}
+          className="rounded-xl border border-black/10 bg-white shadow-sm p-4"
         >
           <div className="flex items-start gap-3">
-            <div className="text-2xl leading-none select-none" aria-hidden>
-              {f.icon}
+            <div className="text-xl" aria-hidden>
+              {t.icon}
             </div>
             <div className="min-w-0">
-              <h4 className="font-semibold text-slate-900">{f.title}</h4>
-              <p className="text-sm text-slate-500">{f.desc}</p>
+              <h4 className="font-semibold">{t.title}</h4>
+              <p className="text-sm text-slate-600 mt-0.5">{t.desc}</p>
             </div>
           </div>
-        </div>
+        </article>
       ))}
     </section>
   );

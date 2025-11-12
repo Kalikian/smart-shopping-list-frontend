@@ -1,7 +1,6 @@
 // src/components/EditItemInline.tsx
 import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 import type { Item } from "./ListItem";
-import { X } from "lucide-react";
 
 type EditItemInlineProps = {
   item: Item;
@@ -34,29 +33,13 @@ export default function EditItemInline({
     onApply(patch);
   };
 
+  // Minimal: kein eigener Rahmen/Title/Close-Button; nur das Formular
   return (
-    <div className="rounded-xl border border-black/10 bg-white shadow-sm p-2">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-semibold">Edit item</h4>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="h-8 w-8 grid place-items-center rounded-md hover:bg-black/5"
-          aria-label="Cancel edit"
-          title="Cancel"
-        >
-          <X className="h-4 w-4" aria-hidden />
-        </button>
-      </div>
-
-      {/* Offen rendern & vorbelegen */}
-      <AddItemInline
-        initial={initial}
-        forceOpen
-        title="Edit item"
-        onSubmit={handleSubmit}
-        onCancel={onCancel}
-      />
-    </div>
+    <AddItemInline
+      initial={initial}
+      forceOpen
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+    />
   );
 }

@@ -1,22 +1,19 @@
-// CompactRow.tsx
-// Compact, swipeable row used in "Later" and "In cart" buckets.
-// - Right-swipe => send back to Open (visual: list PNG + label)
-// - Keeps TrashButton; no other inline actions
-// - Parent executes the move via onPrimaryAction()
-// - Blueish swipe background to differentiate from cart green
-
-import { useMemo, useRef, useState } from "react";
+// src/components/CompactRow.tsx
+import { useState } from "react";
 import { useSwipeable } from "react-swipeable";
+import { motion } from "framer-motion";
 import type { Item } from "./ListItem";
 import TrashButton from "./ui/TrashButton";
 import secondaryListIcon from "../assets/icons/secondaryListIcon.png";
 
 type CompactRowProps = {
   item: Item;
-  color: string; // category tint (HSL string)
-  onPrimaryAction: () => void; // called on successful right-swipe
+  color: string;
+  onPrimaryAction: () => void;
   onDelete?: (id: string) => void;
   enableSwipeToOpen?: boolean;
+  /** NEW: gate layout animation for this row */
+  layoutEnabled?: boolean;
 };
 
 export default function CompactRow({
@@ -25,115 +22,113 @@ export default function CompactRow({
   onPrimaryAction,
   onDelete,
   enableSwipeToOpen = true,
+  layoutEnabled = true, // default stays as before
 }: CompactRowProps) {
-  // Visual swipe state
-  const [dx, setDx] = useState(0); // current drag offset (px)
-  const [isDragging, setDragging] = useState(false);
-  const [isCommitting, setCommitting] = useState(false); // lock while firing
+  const [dragX, setDragX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
-  const contentRef = useRef<HTMLDivElement | null>(null);
-
-  // Thresholds
-  const MAX_PULL = 120; // max visual pull
-  const TRIGGER = 56; // commit threshold
+  const CONFIRM_X = 72;
+  const MAX_TRANSLATE = 96;
 
   const handlers = useSwipeable({
-    // Only consider right swipes for "send to Open"
     onSwiping: (e) => {
-      if (!enableSwipeToOpen || isCommitting) return;
-      if (e.dir !== "Right") return;
-      setDragging(true);
-      const pull = Math.min(Math.max(e.deltaX, 0), MAX_PULL);
-      setDx(pull);
+      if (!enableSwipeToOpen) return;
+      if (e.dir !== "Right") return; // ⟵ nur Rechts erlauben
+      setIsSwiping(true);
+      const clamped = Math.min(Math.max(e.deltaX, 0), MAX_TRANSLATE); // ⟵ ≥ 0
+      setDragX(clamped);
     },
     onSwiped: (e) => {
-      if (!enableSwipeToOpen || isCommitting) return;
-      setDragging(false);
-      const shouldCommit = e.dir === "Right" && e.deltaX >= TRIGGER;
-      if (shouldCommit) {
-        // Lock UI, small nudge for feedback, then delegate to parent
-        setCommitting(true);
-        setDx(MAX_PULL);
-        onPrimaryAction(); // parent removes the row -> AnimatePresence handles exit
-        // Safety reset in case parent removal is delayed
-        setTimeout(() => {
-          setDx(0);
-          setCommitting(false);
-        }, 220);
-      } else {
-        // Snap back
-        setDx(0);
+      if (!enableSwipeToOpen) return;
+      setIsSwiping(false);
+      if (e.dir === "Right" && e.absX >= CONFIRM_X) {
+        setDragX(0);
+        onPrimaryAction();
+        return;
       }
+      setDragX(0);
     },
     trackMouse: true,
-    delta: 4, // sensitivity
     preventScrollOnSwipe: true,
   });
 
-  // Background opacity based on pull
-  const bgOpacity = useMemo(() => Math.min(dx / TRIGGER, 1), [dx]);
+  const dragDir = dragX === 0 ? "none" : "right";
+  const swipeBg = dragDir === "right" ? "rgba(37,99,235,0.12)" : "transparent";
+  const rightOpacity = Math.min(1, Math.abs(dragX) / 60);
+  const leftOpacity = 0;
 
   return (
-    <div className="relative select-none" {...handlers}>
-      {/* Swipe background with list image + label (blueish wash) */}
-      <div
-        className="absolute inset-0 flex items-center"
-        aria-hidden="true"
-        style={{
-          pointerEvents: "none",
-          opacity: bgOpacity,
-          transition: isDragging ? "none" : "opacity 160ms ease-out",
-          // Uses token if available; falls back to a blue tone
-          background:
-            "linear-gradient(to right, hsl(var(--action-open, 210 90% 56%) / 0.10), transparent)",
-        }}
-      >
-        <div className="pl-3 pr-2 flex items-center gap-2">
+    <motion.li
+      layout={layoutEnabled ? "position" : false}
+      initial={false}
+      exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+      transition={{
+        layout: layoutEnabled
+          ? { type: "spring", stiffness: 380, damping: 36 }
+          : undefined,
+        opacity: { duration: 0.18 },
+        height: { duration: 0.28 },
+      }}
+      className="list-none marker:hidden px-2 py-1"
+    >
+      <div className="relative rounded-lg overflow-hidden" {...handlers}>
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: swipeBg }}
+        >
           <div
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md"
-            style={{
-              background: "hsl(var(--action-open, 210 90% 56%) / 0.15)",
-            }}
+            className="absolute inset-y-0 left-3 grid place-items-center"
+            style={{ opacity: rightOpacity }}
+            aria-hidden
           >
-            <img
-              src={secondaryListIcon}
-              alt=""
-              className="h-5 w-5"
-              draggable={false}
-            />
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/15">
+              <img
+                src={secondaryListIcon}
+                alt=""
+                className="h-5 w-5"
+                draggable={false}
+              />
+            </div>
           </div>
-          <span className="text-sm text-slate-700">Send to list</span>
-        </div>
-      </div>
-
-      {/* Foreground card; stays white to avoid green/blue bleed */}
-      <div
-        ref={contentRef}
-        className="relative z-1 rounded-md border border-black/10 bg-white shadow-sm px-3 py-2 flex items-center justify-between gap-3"
-        style={{
-          transform: `translateX(${dx}px)`,
-          transition: isDragging ? "none" : "transform 160ms ease-out",
-        }}
-      >
-        {/* Left: color dot + name */}
-        <div className="min-w-0 flex items-center gap-2">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: color }}
-            aria-hidden="true"
-          />
-          <span className="truncate text-sm">{item.name}</span>
+          <div
+            className="absolute inset-y-0 right-3 grid place-items-center"
+            style={{ opacity: leftOpacity }}
+            aria-hidden
+          >
+            <span className="text-xl">🕒</span>
+          </div>
         </div>
 
-        {/* Right: Trash only */}
-        {onDelete && (
-          <TrashButton
-            title="Delete item"
-            onClick={() => onDelete(item.id)}
-            ariaLabel="Delete"
-          />
-        )}
+        <div
+          className="relative h-11 px-2 flex items-center justify-between gap-2 rounded-lg border border-black/10 bg-white transition-[box-shadow,transform] will-change-transform"
+          style={{
+            transform:
+              isSwiping || dragX !== 0
+                ? `translateX(${dragX}px)`
+                : "translateX(0)",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div className="min-w-0 flex items-center gap-2">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+              style={{
+                backgroundColor: color || "hsl(var(--cat-neutral, 0 0% 55%))",
+              }}
+              aria-hidden="true"
+            />
+            <span className="truncate text-sm" title={item.name}>
+              {item.name}
+            </span>
+          </div>
+          {onDelete && (
+            <TrashButton
+              onClick={() => onDelete(item.id)}
+              ariaLabel={`Delete ${item.name}`}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </motion.li>
   );
 }

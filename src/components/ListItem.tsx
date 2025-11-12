@@ -152,18 +152,11 @@ export default function ListItem({
     <li className="list-none marker:hidden px-2 py-1">
       {/* When editing: render editor inline, same card container */}
       {editing ? (
-        <div
-          className="rounded-xl border"
-          style={{ backgroundColor: "#fff", borderColor: brdTint }}
-        >
-          <div className="p-2">
-            <EditItemInline
-              item={item}
-              onApply={handleEditApply}
-              onCancel={handleEditCancel}
-            />
-          </div>
-        </div>
+        <EditItemInline
+          item={item}
+          onApply={handleEditApply}
+          onCancel={handleEditCancel}
+        />
       ) : (
         <div className="relative rounded-lg overflow-hidden" {...handlers}>
           {/* Swipe background layer */}
@@ -179,7 +172,7 @@ export default function ListItem({
               }}
               aria-hidden
             >
-              <span className="text-xl">✅</span>
+              <span className="text-xl">🛒</span>
             </div>
             <div
               className="absolute inset-y-0 right-3 grid place-items-center"
