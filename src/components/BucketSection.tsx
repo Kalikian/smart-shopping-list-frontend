@@ -152,7 +152,7 @@ export default function BucketSection(props: BucketSectionProps) {
               <motion.div
                 role="listitem"
                 key={it.id}
-                className="p-2"
+                className="p-0"
                 layout={animateBucket ? "position" : false}
                 style={{
                   willChange: animateBucket ? "transform" : undefined,

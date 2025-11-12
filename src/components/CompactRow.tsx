@@ -69,7 +69,7 @@ export default function CompactRow({
         opacity: { duration: 0.18 },
         height: { duration: 0.28 },
       }}
-      className="list-none marker:hidden px-2 py-1"
+      className="list-none marker:hidden px-2 py-2"
     >
       <div className="relative rounded-lg overflow-hidden" {...handlers}>
         <div
@@ -100,7 +100,7 @@ export default function CompactRow({
         </div>
 
         <div
-          className="relative h-11 px-2 flex items-center justify-between gap-2 rounded-lg border border-black/10 bg-white transition-[box-shadow,transform] will-change-transform"
+          className="relative min-h-16 px-4 py-3 flex items-center justify-between gap-2 rounded-lg border border-black/10 bg-white transition-[box-shadow,transform] will-change-transform"
           style={{
             transform:
               isSwiping || dragX !== 0
@@ -117,7 +117,8 @@ export default function CompactRow({
               }}
               aria-hidden="true"
             />
-            <span className="truncate text-sm" title={item.name}>
+            {/* nur Beschriftung größer, nicht fett */}
+            <span className="truncate text-lg text-slate-900" title={item.name}>
               {item.name}
             </span>
           </div>

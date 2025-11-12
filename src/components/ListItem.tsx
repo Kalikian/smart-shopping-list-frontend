@@ -1,5 +1,6 @@
 // src/components/ListItem.tsx
-// Compact swipeable row with inline editor toggle.
+// Swipeable row with inline editor.
+// Larger typography + taller row to match FeatureTiles.
 
 import { useMemo, useState } from "react";
 import { useSwipeable } from "react-swipeable";
@@ -21,13 +22,13 @@ export type Item = {
 
 type ListItemProps = {
   item: Item;
-  onToggle?: (id: string) => void; // kept for compatibility
+  onToggle?: (id: string) => void;
   onChange: (patch: Partial<Item>) => void;
   onDelete?: (id: string) => void;
-  color: string; // category color token (e.g., "hsl(var(--cat-produce))")
+  color: string;
 };
 
-// Neutral icon-only button (like TrashButton, but neutral)
+// Larger neutral icon button for better tap targets
 function IconButton({
   label,
   onClick,
@@ -43,20 +44,19 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="h-8 w-8 grid place-items-center rounded-md text-slate-700 hover:bg-black/5 active:bg-black/10"
+      className="h-10 w-10 grid place-items-center rounded-md text-slate-800 hover:bg-black/5 active:bg-black/10"
     >
       {children}
     </button>
   );
 }
 
-// Tiny pencil SVG
 function EditIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 20 20"
-      width="16"
-      height="16"
+      width="18"
+      height="18"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.6"
@@ -77,13 +77,12 @@ export default function ListItem({
 }: ListItemProps) {
   const [editing, setEditing] = useState(false);
 
-  // --- Category / color tokens ------------------------------------------------
   const categoryLabel: CategoryLabel = item.category ?? "Default";
   const isDefault = categoryLabel === "Default";
   const effectiveColor = isDefault ? undefined : color;
 
   const bgTint = useMemo(
-    () => (isDefault ? "#fff" : alphaTint(effectiveColor!, 0.06)),
+    () => (isDefault ? "#fff" : alphaTint(effectiveColor!, 0.08)),
     [effectiveColor, isDefault]
   );
   const brdTint = useMemo(
@@ -91,7 +90,6 @@ export default function ListItem({
     [effectiveColor, isDefault]
   );
 
-  // --- Swipe state ------------------------------------------------------------
   const [dragX, setDragX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const CONFIRM_X = 72;
@@ -99,7 +97,7 @@ export default function ListItem({
 
   const handlers = useSwipeable({
     onSwiping: (e) => {
-      if (editing) return; // disable swipe while editing
+      if (editing) return;
       setIsSwiping(true);
       const clamped =
         e.deltaX > 0
@@ -140,7 +138,6 @@ export default function ListItem({
       : "—";
   const unitTxt = item.unit ?? "";
 
-  // --- Inline edit actions ----------------------------------------------------
   const handleEditOpen = () => setEditing(true);
   const handleEditCancel = () => setEditing(false);
   const handleEditApply = (patch: Partial<Item>) => {
@@ -149,8 +146,7 @@ export default function ListItem({
   };
 
   return (
-    <li className="list-none marker:hidden px-2 py-1">
-      {/* When editing: render editor inline, same card container */}
+    <li className="list-none marker:hidden px-2 py-2">
       {editing ? (
         <EditItemInline
           item={item}
@@ -158,8 +154,8 @@ export default function ListItem({
           onCancel={handleEditCancel}
         />
       ) : (
-        <div className="relative rounded-lg overflow-hidden" {...handlers}>
-          {/* Swipe background layer */}
+        <div className="relative rounded-2xl overflow-hidden" {...handlers}>
+          {/* Swipe background */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{ backgroundColor: swipeBg }}
@@ -172,7 +168,7 @@ export default function ListItem({
               }}
               aria-hidden
             >
-              <span className="text-xl">🛒</span>
+              <span className="text-[26px]">🛒</span>
             </div>
             <div
               className="absolute inset-y-0 right-3 grid place-items-center"
@@ -182,13 +178,13 @@ export default function ListItem({
               }}
               aria-hidden
             >
-              <span className="text-xl">🕒</span>
+              <span className="text-[26px]">🕒</span>
             </div>
           </div>
 
-          {/* Foreground row */}
+          {/* Foreground row — tall like FeatureTiles */}
           <div
-            className="relative h-11 px-2 flex items-center justify-between gap-2 rounded-lg border transition-[box-shadow,transform] will-change-transform"
+            className="relative min-h-16 px-4 py-3 flex items-center justify-between gap-3 rounded-2xl border shadow-sm transition-[box-shadow,transform] will-change-transform"
             style={{
               transform:
                 isSwiping || dragX !== 0
@@ -196,29 +192,29 @@ export default function ListItem({
                   : "translateX(0)",
               backgroundColor: bgTint,
               borderColor: brdTint,
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
             }}
           >
-            {/* LEFT: Category logo + name/qty/unit */}
-            <div className="min-w-0 flex items-center gap-2">
+            {/* LEFT */}
+            <div className="min-w-0 flex items-center gap-3">
               <div className="shrink-0">
                 <CategoryBadge label={categoryLabel} color={effectiveColor} />
               </div>
-              <div className="min-w-0 flex items-center gap-2 text-sm">
-                <span
-                  className="font-medium truncate max-w-[48vw]"
-                  title={item.name}
-                >
+              <div className="min-w-0 flex items-center gap-2 text-lg">
+                <span className="text-slate-900 truncate max-w-[58vw]">
                   {item.name}
                 </span>
-                <span className="text-slate-500">·</span>
-                <span className="tabular-nums text-slate-700">{qtyTxt}</span>
-                {unitTxt && <span className="text-slate-700">{unitTxt}</span>}
+                <span className="text-slate-600">·</span>
+                <span className="tabular-nums text-slate-800 text-base">
+                  {qtyTxt}
+                </span>
+                {unitTxt && (
+                  <span className="text-slate-800 text-base">{unitTxt}</span>
+                )}
               </div>
             </div>
 
-            {/* RIGHT: Edit + Trash */}
-            <div className="flex items-center gap-1 shrink-0">
+            {/* RIGHT */}
+            <div className="flex items-center gap-2 shrink-0">
               <IconButton label={`Edit ${item.name}`} onClick={handleEditOpen}>
                 <EditIcon />
               </IconButton>
