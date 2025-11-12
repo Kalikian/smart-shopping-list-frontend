@@ -6,4 +6,5 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  base: "/smart-shopping-list/",
 })
