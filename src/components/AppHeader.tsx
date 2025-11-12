@@ -4,7 +4,7 @@
 // - Progress bar reflects done/total
 // - Colors come from theme.css tokens (accent + neutrals)
 
-import logoPng from "../assets/icons/listIcon.png";
+import logoPng from "../assets/icons/mainListIcon.png";
 
 type AppHeaderProps = {
   /** Number of items not completed yet */

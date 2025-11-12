@@ -1,10 +1,16 @@
+// src/components/List.tsx
+// Sectioned list with Open / Later / In cart buckets.
+// - Smooth layout animations + same-section scroll anchoring
+// - TS-safe easing tuples for framer-motion
+// - Buckets trigger move-back-to-Open via onPrimaryAction
+
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from "react";
 import ListItem, { type Item } from "./ListItem";
 import type { CategoryLabel } from "../constants/categories";
 import { sortItemsByCategory } from "../utils/sortItems";
 import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { Transition } from "framer-motion";
+import type { Transition, Easing } from "framer-motion";
 import BucketSection from "./BucketSection";
 
 type ListProps = {
@@ -54,7 +60,7 @@ export default function List({
 }: ListProps) {
   const reduceMotion = useReducedMotion();
 
-  // sort & buckets
+  // Sort into buckets
   const sorted = useMemo(() => sortItemsByCategory(items), [items]);
   const openItems = useMemo(
     () => sorted.filter((i) => !i.done && !i.snoozed),
@@ -70,24 +76,24 @@ export default function List({
   const laterCount = laterItems.length;
   const remaining = openCount + laterCount;
 
-  // animation controls kept here
+  // Animation flags
   const [laterAnimFromIdx, setLaterAnimFromIdx] = useState<number | null>(null);
   const [doneAnimFromIdx, setDoneAnimFromIdx] = useState<number | null>(null);
   const [actionSource, setActionSource] = useState<ActionSource>(null);
 
-  // refs for anchoring (pass into sections)
+  // Anchoring refs per section
   const laterSectionRef = useRef<HTMLDivElement | null>(null);
   const doneSectionRef = useRef<HTMLDivElement | null>(null);
   const laterListRef = useRef<HTMLDivElement | null>(null);
   const doneListRef = useRef<HTMLDivElement | null>(null);
 
-  // same-section anchoring state
+  // Same-section scroll anchoring state
   const anchorElRef = useRef<Element | null>(null);
   const anchorScrollElRef = useRef<ScrollEl | null>(null);
   const [anchorTopBefore, setAnchorTopBefore] = useState<number | null>(null);
   const [preserveAnchorScroll, setPreserveAnchorScroll] = useState(false);
 
-  // cleanup flags
+  // Cleanup flags when lengths change
   useEffect(() => setLaterAnimFromIdx(null), [laterItems.length]);
   useEffect(() => setDoneAnimFromIdx(null), [doneItems.length]);
   useEffect(
@@ -95,7 +101,7 @@ export default function List({
     [openItems.length, laterItems.length, doneItems.length]
   );
 
-  // apply scroll compensation after layout
+  // Apply scroll compensation after layout commit
   useLayoutEffect(() => {
     if (!preserveAnchorScroll) return;
     requestAnimationFrame(() => {
@@ -118,16 +124,20 @@ export default function List({
   const colorFor = (c: CategoryLabel) =>
     c === "Default" ? NEUTRAL : getColorForCategory(c);
 
-  // transitions
+  // ---- Transitions (TS-safe) ----
   const OPEN_ROW_SPRING: Transition = {
     type: "spring",
     stiffness: 360,
     damping: 42,
     mass: 0.6,
   };
+
+  // Use a tuple or Easing type; strings like "easeInOut" may be disallowed by your typings
+  const EASE_IN_OUT: Easing = [0.4, 0, 0.2, 1] as const;
+
   const SUCCESSOR_ROW_TWEEN: Transition = {
     type: "tween",
-    ease: "easeInOut",
+    ease: EASE_IN_OUT,
     duration: 0.75,
   };
   const SECTION_SPRING_SOFT: Transition = {
@@ -204,7 +214,7 @@ export default function List({
         animateBucket={actionSource === "later"}
         animFromIdx={laterAnimFromIdx}
         setAnimFromIdx={setLaterAnimFromIdx}
-        // transitions (ensure these consts are defined above)
+        // transitions
         sectionSpring={SECTION_SPRING_SOFT}
         successorTween={SUCCESSOR_ROW_TWEEN}
         instant={INSTANT}
@@ -214,7 +224,6 @@ export default function List({
         listRef={laterListRef}
         // visuals & actions
         colorFor={colorFor}
-        primaryActionLabel="Move to Open"
         onPrimaryAction={(it) => {
           setActionSource("later");
 
@@ -225,6 +234,7 @@ export default function List({
           setAnchorTopBefore(getRelativeTop(anchorEl || null, scroller));
           setPreserveAnchorScroll(true);
 
+          // Move back to Open
           onChange(it.id, { snoozed: false });
         }}
         onDelete={onDelete}
@@ -245,7 +255,6 @@ export default function List({
         sectionRef={doneSectionRef}
         listRef={doneListRef}
         colorFor={colorFor}
-        primaryActionLabel="Undo"
         onPrimaryAction={(it) => {
           setActionSource("done");
 
@@ -256,6 +265,7 @@ export default function List({
           setAnchorTopBefore(getRelativeTop(anchorEl || null, scroller));
           setPreserveAnchorScroll(true);
 
+          // Move back to Open
           onChange(it.id, { done: false });
         }}
         onDelete={onDelete}
