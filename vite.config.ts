@@ -3,9 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  // Prod: GitHub Pages unter /smart-shopping-list-frontend/
+  // Prod: GitHub Pages unter /smart-shopping-list/
   // Dev: /
   base: process.env.NODE_ENV === "production"
-    ? "/smart-shopping-list-frontend/"
+    ? "/smart-shopping-list/"
     : "/",
 });
