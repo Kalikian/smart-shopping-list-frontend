@@ -6,18 +6,27 @@
 
     <title>Smart Shopping List</title>
 
-    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-    <link rel="icon" type="image/png" href="%BASE_URL%favicon.png" />
-    <meta name="theme-color" content="#5b8cff" />
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.webmanifest" />
 
-    <!-- Android/Chrome -->
+    <!-- iOS App Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png" />
+
+    <!-- Theme Colors -->
+    <!-- Light Mode -->
+    <meta name="theme-color" content="#10B981" media="(prefers-color-scheme: light)" />
+    <!-- Dark Mode -->
+    <meta name="theme-color" content="#0b0f19" media="(prefers-color-scheme: dark)" />
+
+    <!-- PWA Capabilities -->
+    <!-- Android -->
     <meta name="mobile-web-app-capable" content="yes" />
 
     <!-- iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
