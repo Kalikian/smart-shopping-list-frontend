@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   /** Click handler */
@@ -23,17 +24,24 @@ type Props = {
 export default function TrashButton({
   onClick,
   ariaLabel,
-  title = "Delete",
+  title,
   size = 18,
   className = "",
   ...rest
 }: Props) {
+  const { t } = useTranslation("common");
+  const effectiveTitle =
+    title ??
+    t("buttons.delete", {
+      defaultValue: "Delete",
+    });
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
-      title={title}
+      title={effectiveTitle}
       className={[
         "rounded-full p-2 hover:bg-red-50 text-red-500 hover:text-red-600",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200",
