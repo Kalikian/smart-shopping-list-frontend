@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+// src/components/MyListsDialog.tsx
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback, // <-- neu
+} from "react";
+import { useTranslation } from "react-i18next";
 import {
   getAllLists,
   selectList,
@@ -13,7 +21,8 @@ type MyListsDialogProps = {
   open: boolean;
   onClose: () => void;
   onSelected?: (list: ListSnapshot) => void;
-  onDeletedCurrent?: () => void; // fire when the currently selected list gets deleted
+  /** Fired when the currently selected list gets deleted */
+  onDeletedCurrent?: () => void;
 };
 
 export default function MyListsDialog({
@@ -22,6 +31,8 @@ export default function MyListsDialog({
   onSelected,
   onDeletedCurrent,
 }: MyListsDialogProps) {
+  const { t } = useTranslation("common");
+
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<ListMeta[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,12 +42,7 @@ export default function MyListsDialog({
 
   const current = loadSnapshot();
 
-  useEffect(() => {
-    if (!open) return;
-    reload();
-  }, [open]);
-
-  function reload() {
+  const reload = useCallback(() => {
     setQuery("");
     setError(null);
     setLoading(true);
@@ -45,12 +51,21 @@ export default function MyListsDialog({
       setItems(all);
     } catch (e) {
       console.error(e);
-      setError("Failed to load lists.");
+      setError(
+        t("lists.loadError", {
+          defaultValue: "Failed to load lists.",
+        })
+      );
     } finally {
       setLoading(false);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
-  }
+  }, [t]);
+
+  useEffect(() => {
+    if (!open) return;
+    reload();
+  }, [open, reload]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -65,20 +80,30 @@ export default function MyListsDialog({
         onSelected?.(snap);
         onClose();
       } else {
-        setError("List not found. It may have been removed.");
+        setError(
+          t("lists.notFound", {
+            defaultValue: "List not found. It may have been removed.",
+          })
+        );
       }
     } catch (e) {
       console.error(e);
-      setError("Unexpected error. Please try again.");
+      setError(
+        t("errors.unexpected", {
+          defaultValue: "Unexpected error. Please try again.",
+        })
+      );
     }
   }
 
   function requestDelete(id: string) {
     setConfirmId(id);
   }
+
   function cancelDelete() {
     setConfirmId(null);
   }
+
   function confirmDelete() {
     if (!confirmId) return;
     const id = confirmId;
@@ -89,7 +114,11 @@ export default function MyListsDialog({
       reload();
     } catch (e) {
       console.error(e);
-      setError("Failed to delete list.");
+      setError(
+        t("lists.deleteError", {
+          defaultValue: "Failed to delete list.",
+        })
+      );
       setConfirmId(null);
     }
   }
@@ -108,11 +137,15 @@ export default function MyListsDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">My Lists</h2>
+          <h2 className="text-lg font-semibold">
+            {t("hero.myLists", { defaultValue: "My Lists" })}
+          </h2>
           <button
             onClick={onClose}
             className="rounded-lg px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
-            aria-label="Close dialog"
+            aria-label={t("dialogs.close", {
+              defaultValue: "Close dialog",
+            })}
           >
             ✕
           </button>
@@ -123,25 +156,38 @@ export default function MyListsDialog({
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name…"
+            placeholder={t("lists.searchPlaceholder", {
+              defaultValue: "Search by name…",
+            })}
             className="w-full"
             enterKeyHint="search"
             autoComplete="off"
           />
         </div>
 
-        {loading && <p className="text-sm text-neutral-500">Loading…</p>}
+        {loading && (
+          <p className="text-sm text-neutral-500">
+            {t("lists.loading", { defaultValue: "Loading…" })}
+          </p>
+        )}
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         {!loading && !error && (
           <>
             {filtered.length === 0 ? (
-              <p className="text-sm text-neutral-500">No lists found.</p>
+              <p className="text-sm text-neutral-500">
+                {t("lists.empty", { defaultValue: "No lists found." })}
+              </p>
             ) : (
               <ul className="max-h-80 space-y-2 overflow-y-auto">
                 {filtered.map((m) => {
                   const isConfirming = confirmId === m.id;
                   const isCurrent = current?.id === m.id;
+                  const updatedLabel = t("lists.updatedAt", {
+                    value: new Date(m.updatedAt).toLocaleString(),
+                    defaultValue: "Updated {{value}}",
+                  });
+
                   return (
                     <li
                       key={m.id}
@@ -154,20 +200,28 @@ export default function MyListsDialog({
                           onClick={() => handleSelect(m.id)}
                           title={
                             isCurrent
-                              ? "Currently selected"
-                              : "Select this list"
+                              ? t("lists.currentTooltip", {
+                                  defaultValue: "Currently selected",
+                                })
+                              : t("lists.selectTooltip", {
+                                  defaultValue: "Select this list",
+                                })
                           }
                         >
                           <span className="truncate font-medium">
                             {m.name}{" "}
                             {isCurrent && (
                               <span className="text-xs text-[hsl(var(--accent))]">
-                                (current)
+                                (
+                                {t("lists.currentSuffix", {
+                                  defaultValue: "current",
+                                })}
+                                )
                               </span>
                             )}
                           </span>
                           <span className="text-xs text-neutral-500">
-                            Updated {new Date(m.updatedAt).toLocaleString()}
+                            {updatedLabel}
                           </span>
                         </button>
 
@@ -175,8 +229,10 @@ export default function MyListsDialog({
                         {!isConfirming ? (
                           <TrashButton
                             onClick={() => requestDelete(m.id)}
-                            ariaLabel={`Delete list ${m.name}`}
-                            // optional: Platz anpassen
+                            ariaLabel={t("lists.deleteListLabel", {
+                              name: m.name,
+                              defaultValue: `Delete list ${m.name}`,
+                            })}
                             className=""
                           />
                         ) : (
@@ -185,13 +241,17 @@ export default function MyListsDialog({
                               className="rounded-lg border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
                               onClick={cancelDelete}
                             >
-                              Cancel
+                              {t("buttons.cancel", {
+                                defaultValue: "Cancel",
+                              })}
                             </button>
                             <button
                               className="rounded-lg bg-red-600 px-2 py-1 text-xs font-semibold text-white hover:bg-red-700"
                               onClick={confirmDelete}
                             >
-                              Delete
+                              {t("buttons.delete", {
+                                defaultValue: "Delete",
+                              })}
                             </button>
                           </div>
                         )}
@@ -210,7 +270,7 @@ export default function MyListsDialog({
             onClick={onClose}
             className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
           >
-            Close
+            {t("buttons.close", { defaultValue: "Close" })}
           </button>
         </div>
       </div>
