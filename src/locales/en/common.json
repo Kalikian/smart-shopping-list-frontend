@@ -14,10 +14,12 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "deleteItem": "Delete {{name}}",
     "clearDone": "Clear completed",
     "undo": "Undo",
     "moveToLater": "Move to Later",
-    "moveToOpen": "Move to Open"
+    "moveToOpen": "Move to Open",
+    "confirm": "Confirm"
   },
   "list": {
     "headerSummary": "{{open}} open · {{total}} total"
@@ -55,10 +57,56 @@
     "open": "Open: {{count}}",
     "later": "Later: {{count}}",
     "inCart": "In cart: {{count}}",
-    "done": "Done: {{count}}"
+    "done": "Done: {{count}}",
+    "headerAria": "Total {{total}}, done {{done}}",
+    "headerTitle": "Total {{total}} • Done {{done}}",
+    "doneSuffix": "done"
   },
   "validation": {
     "nameRequired": "Name must not be empty.",
     "amountMin": "Amount must be at least 1."
+  },
+  "createList": {
+    "title": "Create a new list",
+    "nameLabel": "List name",
+    "placeholder": "e.g., Weekly Groceries",
+    "duplicateError": "A list with this name already exists.",
+    "duplicateInline": "This name is already in use.",
+    "creating": "Creating…"
+  },
+  "errors": {
+    "unexpected": "Unexpected error. Please try again."
+  },
+  "features": {
+    "howItWorks": "How it works",
+    "fastInput": {
+      "title": "Fast input",
+      "desc": "Add multiple items quickly."
+    },
+    "smartGrouping": {
+      "title": "Smart grouping",
+      "desc": "Auto by aisle/category."
+    },
+    "swipeComplete": {
+      "title": "Swipe to complete"
+    },
+    "quickUndo": {
+      "title": "Quick undo"
+    },
+    "editDelete": {
+      "title": "Edit & delete",
+      "desc": "Use the pencil to edit details, the bin to remove an item."
+    }
+  },
+  "hero": {
+    "badge": "Quick & simple",
+    "title": "Build smarter lists in seconds.",
+    "subtitle": "Add items fast, group by category, and check them off in-store.",
+    "createNew": "Create new list",
+    "myLists": "My Lists"
+  },
+  "bucket": {
+    "collapse": "Collapse",
+    "showAll": "Show all"
   }
 }

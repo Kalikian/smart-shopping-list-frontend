@@ -33,7 +33,7 @@ export default function EditItemInline({
     onApply(patch);
   };
 
-  // Minimal: kein eigener Rahmen/Title/Close-Button; nur das Formular
+  // Minimal wrapper: no own frame/title/close button; delegates all UI to AddItemInline
   return (
     <AddItemInline
       initial={initial}
