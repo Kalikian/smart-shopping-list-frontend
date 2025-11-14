@@ -5,6 +5,7 @@
 // - Buckets trigger move-back-to-Open via onPrimaryAction
 
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import ListItem, { type Item } from "./ListItem";
 import type { CategoryLabel } from "../constants/categories";
 import { sortItemsByCategory } from "../utils/sortItems";
@@ -58,6 +59,7 @@ export default function List({
   getColorForCategory,
   onAdd,
 }: ListProps) {
+  const { t } = useTranslation("common");
   const reduceMotion = useReducedMotion();
 
   // Sort into buckets
@@ -151,7 +153,8 @@ export default function List({
       {/* Header remains always */}
       <header className="flex items-center justify-between">
         <h2 className="text-base font-semibold">
-          Remaining <span className="text-slate-500">({remaining})</span>
+          {t("list.remainingTitle", { defaultValue: "Remaining" })}{" "}
+          <span className="text-slate-500">({remaining})</span>
         </h2>
       </header>
 
@@ -198,7 +201,7 @@ export default function List({
               exit={{ opacity: 0, height: 0, margin: 0 }}
               className="p-3 text-sm text-slate-500"
             >
-              Nothing open.
+              {t("list.emptyOpen", { defaultValue: "Nothing open." })}
             </motion.div>
           )}
         </AnimatePresence>
@@ -206,8 +209,10 @@ export default function List({
 
       {/* LATER */}
       <BucketSection
-        title="Later"
-        emptyText="Nothing parked for later."
+        title={t("sections.later", { defaultValue: "Later" })}
+        emptyText={t("list.emptyLater", {
+          defaultValue: "Nothing parked for later.",
+        })}
         items={laterItems}
         animateBucket={actionSource === "later"}
         animFromIdx={laterAnimFromIdx}
@@ -234,8 +239,10 @@ export default function List({
 
       {/* IN CART */}
       <BucketSection
-        title="In cart"
-        emptyText="No items in cart."
+        title={t("sections.inCart", { defaultValue: "In cart" })}
+        emptyText={t("list.emptyInCart", {
+          defaultValue: "No items in cart.",
+        })}
         items={doneItems}
         animateBucket={actionSource === "done"}
         animFromIdx={doneAnimFromIdx}
