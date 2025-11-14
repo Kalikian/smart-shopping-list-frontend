@@ -3,6 +3,7 @@
 // Creation/open flows use dialogs; list renders only after user confirms.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AppHeader from "./components/AppHeader";
 import HeroCard from "./components/HeroCard";
 import FeatureTiles from "./components/FeatureTiles";
@@ -28,12 +29,15 @@ import {
   removeItem as removeItemStore,
   type ListSnapshot,
 } from "./data/listStore/index";
-
+import "./i18n";
 function newItemId() {
   return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 export default function App() {
+  // i18n hook for translated UI strings
+  const { t } = useTranslation("common");
+
   // Load snapshot if one exists; do NOT auto-create.
   const [list, setList] = useState<ListSnapshot | null>(loadSnapshot());
 
@@ -105,7 +109,9 @@ export default function App() {
   const handleCreateNew = useCallback(() => setCreateOpen(true), []);
   const handleOpenExisting = useCallback(() => setMyListsOpen(true), []);
 
-  const currentListName = list?.name?.trim() || "My list";
+  // Default list name is now translated via i18n
+  const currentListName =
+    list?.name?.trim() || t("app.defaultListName", "My list");
 
   // Category color resolver for List/ListItem (maps to CSS tokens)
   const getColorForCategory = useCallback(
@@ -136,7 +142,7 @@ export default function App() {
             <div className="mb-2 mt-6 flex items-center justify-between">
               <h2 className="text-base font-semibold">{currentListName}</h2>
               <span className="text-sm opacity-70">
-                {open} open · {total} total
+                {t("list.headerSummary", { open, total })}
               </span>
             </div>
 
@@ -152,8 +158,8 @@ export default function App() {
         )}
         <FeatureTiles />
       </main>
-      <Fab title="Add item" onClick={handleFabClick} /> {/* <-- wire FAB */}
-      {/* If your Fab component didn't accept onClick yet, add it there: props {title, onClick?} */}
+      {/* FAB label comes from i18n buttons namespace */}
+      <Fab title={t("buttons.addItem")} onClick={handleFabClick} />
       {/* --- Modals --- */}
       <CreateListDialog
         open={createOpen}

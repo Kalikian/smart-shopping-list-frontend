@@ -1,0 +1,48 @@
+{
+  "app": {
+    "title": "Smart Shopping List",
+    "tagline": "Fast, simple shopping list."
+  },
+  "nav": {
+    "list": "List",
+    "settings": "Settings"
+  },
+  "buttons": {
+    "addItem": "Add item",
+    "addMany": "Add multiple",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "clearDone": "Clear completed",
+    "undo": "Undo",
+    "moveToLater": "Move to Later",
+    "moveToOpen": "Move to Open"
+  },
+  "sections": {
+    "open": "Open",
+    "later": "Later",
+    "inCart": "In cart",
+    "done": "Done"
+  },
+  "emptyState": {
+    "title": "No items yet",
+    "body": "Add your first item to get started."
+  },
+  "item": {
+    "nameLabel": "Item",
+    "amountLabel": "Amount",
+    "unitLabel": "Unit",
+    "categoryLabel": "Category"
+  },
+  "stats": {
+    "total": "Total: {{count}} items",
+    "open": "Open: {{count}}",
+    "later": "Later: {{count}}",
+    "inCart": "In cart: {{count}}",
+    "done": "Done: {{count}}"
+  },
+  "validation": {
+    "nameRequired": "Name must not be empty.",
+    "amountMin": "Amount must be at least 1."
+  }
+}
