@@ -20,10 +20,16 @@
     "undo": "Undo",
     "moveToLater": "Move to Later",
     "moveToOpen": "Move to Open",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "reset": "Reset",
+    "close": "Close"
   },
   "list": {
-    "headerSummary": "{{open}} open · {{total}} total"
+    "headerSummary": "{{open}} open · {{total}} total",
+    "remainingTitle": "Remaining",
+    "emptyOpen": "Nothing open.",
+    "emptyLater": "Nothing parked for later.",
+    "emptyInCart": "No items in cart."
   },
   "sections": {
     "open": "Open",
@@ -49,6 +55,7 @@
   },
   "item": {
     "nameLabel": "Item",
+    "namePlaceholder": "e.g., Bananas",
     "amountLabel": "Amount",
     "unitLabel": "Unit",
     "categoryLabel": "Category"
@@ -89,10 +96,12 @@
       "desc": "Auto by aisle/category."
     },
     "swipeComplete": {
-      "title": "Swipe to complete"
+      "title": "Swipe to complete",
+      "desc": "Swipe right to move items to In cart and left to move them to Later."
     },
     "quickUndo": {
-      "title": "Quick undo"
+      "title": "Quick undo",
+      "desc": "In In cart or Later, swipe right to send an item back to Open."
     },
     "editDelete": {
       "title": "Edit & delete",
@@ -120,5 +129,39 @@
     "mint": "Mint",
     "paper": "Paper",
     "candy": "Candy"
+  },
+  "lists": {
+    "loadError": "Failed to load lists.",
+    "notFound": "List not found. It may have been removed.",
+    "deleteError": "Failed to delete list.",
+    "searchPlaceholder": "Search by name…",
+    "loading": "Loading…",
+    "empty": "No lists found.",
+    "updatedAt": "Updated {{value}}",
+    "currentTooltip": "Currently selected",
+    "selectTooltip": "Select this list",
+    "currentSuffix": "current",
+    "deleteListLabel": "Delete list {{name}}",
+    "deleteConfirm": "Delete this list permanently?",
+    "availableAria": "Available lists",
+    "openListLabel": "Open list {{name}}",
+    "deleteTitle": "Delete list"
+  },
+  "openList": {
+    "title": "Open existing list"
+  },
+  "dialogs": {
+    "close": "Close dialog"
+  },
+  "swipe": {
+    "leftDelete": "Delete",
+    "rightDone": "Done"
+  },
+  "quantity": {
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity"
+  },
+  "addItem": {
+    "editTitle": "Edit item"
   }
 }
