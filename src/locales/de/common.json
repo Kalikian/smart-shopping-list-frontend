@@ -102,15 +102,19 @@
     },
     "swipeComplete": {
       "title": "Per Wischen erledigen",
-      "desc": "Nach rechts wischen, um Artikel in „Im Wagen“ zu verschieben, und nach links für „Später“."
+      "desc": "→ Rechts = in „Im Wagen“. ← Links = in „Später“."
     },
     "quickUndo": {
-      "title": "Schnelles Rückgängig",
-      "desc": "In „Im Wagen“ oder „Später“ nach rechts wischen, um den Artikel zurück zu „Offen“ zu senden."
+      "title": "Schnelles Rückgängigmachen",
+      "desc": "In „Im Wagen“ oder „Später“: nach rechts wischen, um nach „Offen“ zurückzusenden."
     },
     "editDelete": {
-      "title": "Bearbeiten & löschen",
+      "title": "Bearbeiten & Löschen",
       "desc": "Verwende den Stift zum Bearbeiten und den Papierkorb zum Entfernen eines Artikels."
+    },
+    "languageSwitch": {
+      "title": "Sprachwechsel",
+      "desc": "Nutze das Sprachmenü in der Kopfzeile, um zwischen Deutsch und Englisch zu wechseln."
     }
   },
   "hero": {

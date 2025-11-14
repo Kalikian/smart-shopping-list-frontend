@@ -110,15 +110,19 @@
     },
     "swipeComplete": {
       "title": "Swipe to complete",
-      "desc": "Swipe right to move items to In cart and left to move them to Later."
+      "desc": "→ Right = move to In cart. ← Left = move to Later."
     },
     "quickUndo": {
       "title": "Quick undo",
-      "desc": "In In cart or Later, swipe right to send an item back to Open."
+      "desc": "In In cart or Later: swipe right to send back to Open."
     },
     "editDelete": {
       "title": "Edit & delete",
       "desc": "Use the pencil to edit details, the bin to remove an item."
+    },
+    "languageSwitch": {
+      "title": "Language switch",
+      "desc": "Use the language menu in the header to switch between English and German."
     }
   },
   "hero": {

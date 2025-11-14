@@ -30,30 +30,18 @@ export default function FeatureTiles() {
       title: t("features.swipeComplete.title", {
         defaultValue: "Swipe to complete",
       }),
-      desc: (
-        <>
-          <span className="inline-block mr-1" aria-hidden>
-            ➜
-          </span>
-          <strong>Right</strong> = move to <em>In cart</em>.{" "}
-          <span className="inline-block ml-2 mr-1" aria-hidden>
-            ⇠
-          </span>
-          <strong>Left</strong> = move to <em>Later</em>.
-        </>
-      ),
+      desc: t("features.swipeComplete.desc", {
+        defaultValue: "→ Right = move to In cart. ← Left = move to Later.",
+      }),
     },
     {
       icon: "↩️",
       title: t("features.quickUndo.title", {
         defaultValue: "Quick undo",
       }),
-      desc: (
-        <>
-          In <em>In cart</em> or <em>Later</em>: swipe <strong>right</strong> to
-          send back to <em>Open</em>.
-        </>
-      ),
+      desc: t("features.quickUndo.desc", {
+        defaultValue: "In In cart or Later: swipe right to send back to Open.",
+      }),
     },
     {
       icon: "✏️",
@@ -63,6 +51,16 @@ export default function FeatureTiles() {
       desc: t("features.editDelete.desc", {
         defaultValue:
           "Use the pencil to edit details, the bin to remove an item.",
+      }),
+    },
+    {
+      icon: "🌐",
+      title: t("features.languageSwitch.title", {
+        defaultValue: "Language switch",
+      }),
+      desc: t("features.languageSwitch.desc", {
+        defaultValue:
+          "Use the language menu in the header to switch between English and German.",
       }),
     },
   ];
