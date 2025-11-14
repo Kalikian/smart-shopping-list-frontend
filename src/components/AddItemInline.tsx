@@ -1,5 +1,8 @@
 // src/components/AddItemInline.tsx
+// Inline composer for adding or editing an item with keyboard-first UX.
+
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CATEGORIES,
   CATEGORY_DEFAULT,
@@ -17,15 +20,15 @@ export type AddItemInlineSubmit = {
 
 export type AddItemInlineProps = {
   onSubmit: (payload: AddItemInlineSubmit) => void;
-  /** Optional: Cancel-Handler (sichtbarer Cancel-Button + anderes Verhalten) */
+  /** Optional: cancel handler (visible Cancel button + different close behavior) */
   onCancel?: () => void;
-  /** Optional: Vorbelegung der Felder (Edit-Usecase) */
+  /** Optional: initial field values (edit use case) */
   initial?: Partial<AddItemInlineSubmit>;
-  /** Optional: sofort geöffnet rendern (für Inline-Edit) */
+  /** Optional: render in expanded state initially (for inline edit) */
   forceOpen?: boolean;
-  /** Optional: UI-Titel (z.B. "Edit item") */
+  /** Optional: UI title (e.g., "Edit item") */
   title?: string;
-  /** Optional: Name-Input-ID (Fokussteuerung via FAB) */
+  /** Optional: name input id (for focus control via FAB) */
   inputId?: string;
 };
 
@@ -57,6 +60,8 @@ export default function AddItemInline({
   title = "Add item",
   inputId,
 }: AddItemInlineProps) {
+  const { t } = useTranslation("common");
+
   // Detect edit mode by presence of initial/onCancel
   const isEdit = Boolean(initial || onCancel);
 
@@ -75,7 +80,7 @@ export default function AddItemInline({
 
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // Re-seed when `initial` changes (e.g., edit anderer Eintrag)
+  // Re-seed form when `initial` changes (e.g., editing another entry)
   useEffect(() => {
     if (!initial) return;
     setName(initial.name ?? "");
@@ -92,9 +97,9 @@ export default function AddItemInline({
     return () => window.clearTimeout(id);
   }, [open]);
 
-  // Listen to FAB event nur im "Add"-Modus (bei Edit steuern wir lokal)
+  // Listen to FAB event only in "add" mode (edit mode is controlled locally)
   useEffect(() => {
-    if (isEdit) return; // kein FAB in Edit-Flow
+    if (isEdit) return; // no FAB integration in edit flow
     const handler = () => {
       if (open) {
         nameRef.current?.focus();
@@ -138,12 +143,12 @@ export default function AddItemInline({
     });
 
     if (isEdit && onCancel) {
-      // In Edit-Flow schließt der Inline-Editor nach Save
+      // In edit flow, close inline editor after save
       onCancel();
       return;
     }
 
-    // Add-Flow: Reset für nächste Eingabe
+    // Add flow: reset for the next input
     setName("");
     setAmountStr("1");
     setUnit(UNITS[0]);
@@ -160,14 +165,14 @@ export default function AddItemInline({
   };
 
   if (!open) {
-    // Collapsed pill (nur im Add-Flow sinnvoll)
+    // Collapsed pill (only useful in add flow)
     return (
       <div className="px-4 pt-3 pb-2">
         <button
           type="button"
           onClick={() => setOpen(true)}
           className="rounded-xl px-3 py-2 text-sm font-semibold bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
-          aria-label="Add item"
+          aria-label={t("buttons.addItem")}
           title={title}
         >
           + {title}
@@ -186,13 +191,13 @@ export default function AddItemInline({
         <h4 className="text-sm font-semibold">
           {isEdit ? "Edit item" : title}
         </h4>
-        {/* Close in Add-Flow = collapse; in Edit-Flow = Cancel */}
+        {/* Close in add flow = collapse; in edit flow = cancel */}
         <button
           type="button"
           onClick={() => (isEdit && onCancel ? onCancel() : setOpen(false))}
           className="rounded-lg px-2 py-1 text-sm text-[hsl(var(--muted))] hover:bg-slate-50"
-          aria-label={isEdit ? "Cancel" : "Close"}
-          title={isEdit ? "Cancel" : "Close"}
+          aria-label={t("buttons.cancel")}
+          title={t("buttons.cancel")}
         >
           ×
         </button>
@@ -202,7 +207,7 @@ export default function AddItemInline({
         {/* Name (required) */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600">
-            Name *
+            {t("item.nameLabel")} *
           </label>
           <input
             id={inputId ?? "add-item-name"}
@@ -218,7 +223,7 @@ export default function AddItemInline({
         {/* Amount */}
         <div>
           <label className="block text-xs font-medium text-slate-600">
-            Amount
+            {t("item.amountLabel")}
           </label>
           <input
             type="number"
@@ -236,7 +241,7 @@ export default function AddItemInline({
         {/* Unit */}
         <div>
           <label className="block text-xs font-medium text-slate-600">
-            Unit
+            {t("item.unitLabel")}
           </label>
           <select
             value={unit}
@@ -254,7 +259,7 @@ export default function AddItemInline({
         {/* Category */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600">
-            Category
+            {t("item.categoryLabel")}
           </label>
           <select
             value={category}
@@ -277,10 +282,10 @@ export default function AddItemInline({
             disabled={!canSubmit}
             className="flex-1 rounded-xl bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] px-4 py-2 font-semibold hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isEdit ? "Save" : "Add"}
+            {isEdit ? t("buttons.save") : t("buttons.addItem")}
           </button>
 
-          {/* Reset nur sinnvoll im Add-Flow */}
+          {/* Reset is only meaningful in add flow */}
           {!isEdit && (
             <button
               type="button"
