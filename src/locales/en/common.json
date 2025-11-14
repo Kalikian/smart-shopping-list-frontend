@@ -1,4 +1,9 @@
 {
+  "language": {
+    "label": "Language:",
+    "en": "English",
+    "de": "German"
+  },
   "app": {
     "title": "Smart Shopping List",
     "tagline": "Fast, simple shopping list.",
@@ -48,6 +53,14 @@
     "Frozen": "Frozen",
     "Snacks & Sweets": "Snacks & Sweets",
     "Household & Care": "Household & Care"
+  },
+  "units": {
+    "pcs": "pcs",
+    "pack": "pack",
+    "kg": "kg",
+    "g": "g",
+    "L": "L",
+    "mL": "mL"
   },
   "emptyState": {
     "title": "No items yet",
@@ -151,7 +164,9 @@
     "title": "Open existing list"
   },
   "dialogs": {
-    "close": "Close dialog"
+    "close": "Close dialog",
+    "addItemTitle": "Add item",
+    "editItemTitle": "Edit item"
   },
   "swipe": {
     "leftDelete": "Delete",

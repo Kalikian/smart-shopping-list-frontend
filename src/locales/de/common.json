@@ -1,4 +1,9 @@
 {
+  "language": {
+    "label": "Sprache:",
+    "en": "Englisch",
+    "de": "Deutsch"
+  },
   "app": {
     "title": "Smart Shopping List",
     "tagline": "Schnelle, einfache Einkaufsliste.",
@@ -151,7 +156,9 @@
     "title": "Bestehende Liste öffnen"
   },
   "dialogs": {
-    "close": "Dialog schließen"
+    "close": "Dialog schließen",
+    "addItemTitle": "Artikel hinzufügen",
+    "editItemTitle": "Artikel bearbeiten"
   },
   "swipe": {
     "leftDelete": "Löschen",
@@ -163,5 +170,13 @@
   },
   "addItem": {
     "editTitle": "Artikel bearbeiten"
+  },
+  "units": {
+    "pcs": "Stk.",
+    "pack": "Packung",
+    "kg": "kg",
+    "g": "g",
+    "L": "L",
+    "mL": "ml"
   }
 }

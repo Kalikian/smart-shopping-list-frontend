@@ -4,14 +4,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+
 import AppHeader from "./components/AppHeader";
 import HeroCard from "./components/HeroCard";
 import FeatureTiles from "./components/FeatureTiles";
 import List from "./components/List";
 import Fab from "./components/Fab";
 import ThemeSwitcher from "./components/ThemeSwitcher";
+import LanguageSwitcher from "./components/LanguageSwitcher";
 import CreateListDialog from "./components/CreateListDialog";
 import MyListsDialog from "./components/MyListsDialog";
+
 import type { Item } from "./components/ListItem";
 import type { CategoryLabel } from "./constants/categories";
 import { getColorVarForCategory } from "./constants/categories";
@@ -29,13 +32,12 @@ import {
   removeItem as removeItemStore,
   type ListSnapshot,
 } from "./data/listStore/index";
-import "./i18n";
+
 function newItemId() {
   return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 export default function App() {
-  // i18n hook for translated UI strings
   const { t } = useTranslation("common");
 
   // Load snapshot if one exists; do NOT auto-create.
@@ -53,9 +55,9 @@ export default function App() {
   // Header counters
   const { total, open } = useMemo(() => {
     const items = list?.items ?? [];
-    const total = items.length;
+    const totalItems = items.length;
     const done = items.filter((i) => i.done).length;
-    return { total, open: total - done };
+    return { total: totalItems, open: totalItems - done };
   }, [list]);
 
   // Mutations (no-ops if list doesn't exist yet)
@@ -109,9 +111,8 @@ export default function App() {
   const handleCreateNew = useCallback(() => setCreateOpen(true), []);
   const handleOpenExisting = useCallback(() => setMyListsOpen(true), []);
 
-  // Default list name is now translated via i18n
   const currentListName =
-    list?.name?.trim() || t("app.defaultListName", "My list");
+    list?.name?.trim() || t("app.defaultListName", { defaultValue: "My list" });
 
   // Category color resolver for List/ListItem (maps to CSS tokens)
   const getColorForCategory = useCallback(
@@ -126,14 +127,33 @@ export default function App() {
 
   return (
     <div className="min-h-dvh bg-app text-[hsl(var(--text))]">
-      <AppHeader open={open} total={total} />
+      <AppHeader
+        open={open}
+        total={total}
+        title={t("app.title", { defaultValue: "Smart Shopping List" })}
+      />
+
+      {/* Top bar: Theme (left) + Language (right) */}
       <div className="mx-auto max-w-screen-sm safe-x">
-        <ThemeSwitcher />
+        <div className="mt-2 grid grid-cols-2 items-center gap-4">
+          {/* Linke Hälfte: Theme-Switcher */}
+          <div className="flex justify-start">
+            <ThemeSwitcher />
+          </div>
+
+          {/* Rechte Hälfte: Language-Switcher */}
+          <div className="flex justify-end">
+            <LanguageSwitcher />
+          </div>
+        </div>
       </div>
+
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
         <HeroCard
           onCreateNew={handleCreateNew}
           onOpenExisting={handleOpenExisting}
+          title={t("hero.title")}
+          subtitle={t("hero.subtitle")}
         />
 
         {/* Render list ONLY if it exists */}
@@ -142,7 +162,11 @@ export default function App() {
             <div className="mb-2 mt-6 flex items-center justify-between">
               <h2 className="text-base font-semibold">{currentListName}</h2>
               <span className="text-sm opacity-70">
-                {t("list.headerSummary", { open, total })}
+                {t("list.headerSummary", {
+                  open,
+                  total,
+                  defaultValue: "{{open}} open · {{total}} total",
+                })}
               </span>
             </div>
 
@@ -158,8 +182,12 @@ export default function App() {
         )}
         <FeatureTiles />
       </main>
-      {/* FAB label comes from i18n buttons namespace */}
-      <Fab title={t("buttons.addItem")} onClick={handleFabClick} />
+
+      <Fab
+        title={t("buttons.addItem", { defaultValue: "Add item" })}
+        onClick={handleFabClick}
+      />
+
       {/* --- Modals --- */}
       <CreateListDialog
         open={createOpen}

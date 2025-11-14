@@ -23,10 +23,11 @@ import beveragesPng from "../assets/category-icons/beverages.png";
 import frozenPng from "../assets/category-icons/frozen.png";
 import snacksPng from "../assets/category-icons/snacks.png";
 import housholdPng from "../assets/category-icons/houshold.png";
+import defaultPng from "../assets/category-icons/default.png";
 
 // Central: Label -> Icon (Default has no icon)
 export const CATEGORY_ICON_BY_LABEL: Record<CategoryLabel, string | null> = {
-    Default: null,
+    Default: defaultPng,
     Produce: producePng,
     Dairy: dairyPng,
     "Meat & Fish": meatPng,

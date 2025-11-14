@@ -26,7 +26,7 @@ export type AddItemInlineProps = {
   initial?: Partial<AddItemInlineSubmit>;
   /** Optional: render in expanded state initially (for inline edit) */
   forceOpen?: boolean;
-  /** Optional: UI title (e.g., "Edit item") */
+  /** Optional: UI title (e.g., "Edit item") – overrides i18n default */
   title?: string;
   /** Optional: name input id (for focus control via FAB) */
   inputId?: string;
@@ -57,10 +57,17 @@ export default function AddItemInline({
   onCancel,
   initial,
   forceOpen = false,
-  title = "Add item",
+  title,
   inputId,
 }: AddItemInlineProps) {
   const { t } = useTranslation("common");
+
+  // Effective title: use prop if provided, otherwise i18n default
+  const effectiveTitle =
+    title ??
+    t("dialogs.addItemTitle", {
+      defaultValue: "Add item",
+    });
 
   // Detect edit mode by presence of initial/onCancel
   const isEdit = Boolean(initial || onCancel);
@@ -172,10 +179,10 @@ export default function AddItemInline({
           type="button"
           onClick={() => setOpen(true)}
           className="rounded-xl px-3 py-2 text-sm font-semibold bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
-          aria-label={t("buttons.addItem")}
-          title={title}
+          aria-label={t("buttons.addItem", { defaultValue: "Add item" })}
+          title={effectiveTitle}
         >
-          + {title}
+          + {effectiveTitle}
         </button>
       </div>
     );
@@ -187,33 +194,39 @@ export default function AddItemInline({
       className="mx-4 mt-3 mb-2 rounded-2xl border border-[hsl(var(--border))] bg-white shadow-sm p-3"
       onKeyDown={onKeyDown}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <h4 className="text-sm font-semibold">
-          {isEdit ? "Edit item" : title}
+          {isEdit
+            ? t("dialogs.editItemTitle", {
+                defaultValue: "Edit item",
+              })
+            : effectiveTitle}
         </h4>
         {/* Close in add flow = collapse; in edit flow = cancel */}
         <button
           type="button"
           onClick={() => (isEdit && onCancel ? onCancel() : setOpen(false))}
           className="rounded-lg px-2 py-1 text-sm text-[hsl(var(--muted))] hover:bg-slate-50"
-          aria-label={t("buttons.cancel")}
-          title={t("buttons.cancel")}
+          aria-label={t("buttons.cancel", { defaultValue: "Cancel" })}
+          title={t("buttons.cancel", { defaultValue: "Cancel" })}
         >
           ×
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         {/* Name (required) */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600">
-            {t("item.nameLabel")} *
+            {t("item.nameLabel", { defaultValue: "Item" })} *
           </label>
           <input
             id={inputId ?? "add-item-name"}
             ref={nameRef}
             type="text"
-            placeholder="e.g., Bananas"
+            placeholder={t("item.placeholderExample", {
+              defaultValue: "e.g., Bananas",
+            })}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] px-3 py-2 outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
@@ -223,7 +236,7 @@ export default function AddItemInline({
         {/* Amount */}
         <div>
           <label className="block text-xs font-medium text-slate-600">
-            {t("item.amountLabel")}
+            {t("item.amountLabel", { defaultValue: "Amount" })}
           </label>
           <input
             type="number"
@@ -241,16 +254,16 @@ export default function AddItemInline({
         {/* Unit */}
         <div>
           <label className="block text-xs font-medium text-slate-600">
-            {t("item.unitLabel")}
+            {t("item.unitLabel", { defaultValue: "Unit" })}
           </label>
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value as Unit)}
-            className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
+            className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
           >
             {UNITS.map((u) => (
               <option key={u} value={u}>
-                {u}
+                {t(`units.${u}`, { defaultValue: u })}
               </option>
             ))}
           </select>
@@ -259,16 +272,16 @@ export default function AddItemInline({
         {/* Category */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600">
-            {t("item.categoryLabel")}
+            {t("item.categoryLabel", { defaultValue: "Category" })}
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as CategoryLabel)}
-            className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
+            className="mt-1 w-full rounded-xl border border-[hsl(var(--border))] bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]"
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {t(`categories.${c}`, { defaultValue: c })}
               </option>
             ))}
           </select>
@@ -280,9 +293,11 @@ export default function AddItemInline({
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="flex-1 rounded-xl bg-[hsl(var(--accent))] text-[hsl(var(--on-accent))] px-4 py-2 font-semibold hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 rounded-xl bg-[hsl(var(--accent))] px-4 py-2 font-semibold text-[hsl(var(--on-accent))] hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isEdit ? t("buttons.save") : t("buttons.addItem")}
+            {isEdit
+              ? t("buttons.save", { defaultValue: "Save" })
+              : t("buttons.addItem", { defaultValue: "Add item" })}
           </button>
 
           {/* Reset is only meaningful in add flow */}
@@ -298,7 +313,7 @@ export default function AddItemInline({
               }}
               className="rounded-xl border border-[hsl(var(--border))] bg-white px-4 py-2 font-semibold hover:bg-slate-50"
             >
-              Reset
+              {t("buttons.reset", { defaultValue: "Reset" })}
             </button>
           )}
         </div>
