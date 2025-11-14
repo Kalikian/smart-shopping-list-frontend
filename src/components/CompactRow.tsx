@@ -1,7 +1,10 @@
 // src/components/CompactRow.tsx
+// Compact, swipeable row used inside bucket sections (Later / In cart).
+
 import { useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import type { Item } from "./ListItem";
 import TrashButton from "./ui/TrashButton";
 import secondaryListIcon from "../assets/icons/secondaryListIcon.png";
@@ -12,7 +15,7 @@ type CompactRowProps = {
   onPrimaryAction: () => void;
   onDelete?: (id: string) => void;
   enableSwipeToOpen?: boolean;
-  /** NEW: gate layout animation for this row */
+  /** Gate layout animation for this row */
   layoutEnabled?: boolean;
 };
 
@@ -22,8 +25,9 @@ export default function CompactRow({
   onPrimaryAction,
   onDelete,
   enableSwipeToOpen = true,
-  layoutEnabled = true, // default stays as before
+  layoutEnabled = true,
 }: CompactRowProps) {
+  const { t } = useTranslation("common");
   const [dragX, setDragX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
 
@@ -33,9 +37,9 @@ export default function CompactRow({
   const handlers = useSwipeable({
     onSwiping: (e) => {
       if (!enableSwipeToOpen) return;
-      if (e.dir !== "Right") return; // ⟵ nur Rechts erlauben
+      if (e.dir !== "Right") return; // only allow right swipe
       setIsSwiping(true);
-      const clamped = Math.min(Math.max(e.deltaX, 0), MAX_TRANSLATE); // ⟵ ≥ 0
+      const clamped = Math.min(Math.max(e.deltaX, 0), MAX_TRANSLATE); // clamp to >= 0
       setDragX(clamped);
     },
     onSwiped: (e) => {
@@ -117,7 +121,7 @@ export default function CompactRow({
               }}
               aria-hidden="true"
             />
-            {/* nur Beschriftung größer, nicht fett */}
+            {/* Emphasize label size without bold weight */}
             <span className="truncate text-lg text-slate-900" title={item.name}>
               {item.name}
             </span>
@@ -125,7 +129,10 @@ export default function CompactRow({
           {onDelete && (
             <TrashButton
               onClick={() => onDelete(item.id)}
-              ariaLabel={`Delete ${item.name}`}
+              ariaLabel={t("buttons.deleteItem", {
+                name: item.name,
+                defaultValue: `Delete ${item.name}`,
+              })}
             />
           )}
         </div>
