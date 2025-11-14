@@ -158,7 +158,10 @@ export default function ListItem({
             {/* LEFT */}
             <div className="min-w-0 flex items-center gap-3">
               <div className="shrink-0">
-                <CategoryBadge label={categoryLabel} color={effectiveColor} />
+                <CategoryBadge
+                  category={categoryLabel}
+                  color={effectiveColor}
+                />
               </div>
               <div className="min-w-0 flex items-center gap-2 text-lg">
                 <span className="text-slate-900 truncate max-w-[58vw]">
