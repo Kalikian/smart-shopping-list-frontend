@@ -15,6 +15,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "deleteItem": "Delete {{name}}",
+    "editItem": "Edit {{name}}",
     "clearDone": "Clear completed",
     "undo": "Undo",
     "moveToLater": "Move to Later",
