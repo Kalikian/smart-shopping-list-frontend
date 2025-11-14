@@ -1,3 +1,4 @@
+// src/components/OpenListDialog.tsx
 // Dialog to open an existing list.
 // - Loads all ListMeta via getAllLists() when opened
 // - Filter-as-you-type (case-insensitive)
@@ -8,6 +9,7 @@
 // Tailwind-based styling; adjust tokens as needed.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   getAllLists,
   selectList,
@@ -28,6 +30,8 @@ export default function OpenListDialog({
   onClose,
   onSelected,
 }: OpenListDialogProps) {
+  const { t } = useTranslation("common");
+
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<ListMeta[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,13 +49,17 @@ export default function OpenListDialog({
       setItems(all);
     } catch (e) {
       console.error(e);
-      setError("Failed to load lists.");
+      setError(
+        t("lists.loadError", {
+          defaultValue: "Failed to load lists.",
+        })
+      );
     } finally {
       setLoading(false);
       // autofocus after paint
       setTimeout(() => inputRef.current?.focus(), 0);
     }
-  }, [open]);
+  }, [open, t]);
 
   // Filtered view
   const filtered = useMemo(() => {
@@ -67,18 +75,30 @@ export default function OpenListDialog({
         onSelected?.(snap);
         onClose();
       } else {
-        setError("List not found. It may have been removed.");
+        setError(
+          t("lists.notFound", {
+            defaultValue: "List not found. It may have been removed.",
+          })
+        );
       }
     } catch (e) {
       console.error(e);
-      setError("Unexpected error. Please try again.");
+      setError(
+        t("errors.unexpected", {
+          defaultValue: "Unexpected error. Please try again.",
+        })
+      );
     }
   }
 
   // Hard delete handler (Local Storage + UI index refresh)
   function handleDelete(id: string) {
     // Simple safety check; replace with a custom modal if desired.
-    const ok = window.confirm("Delete this list permanently?");
+    const ok = window.confirm(
+      t("lists.deleteConfirm", {
+        defaultValue: "Delete this list permanently?",
+      })
+    );
     if (!ok) return;
 
     try {
@@ -89,7 +109,11 @@ export default function OpenListDialog({
       // the UX will simply show "No lists found."
     } catch (e) {
       console.error(e);
-      setError("Failed to delete list. Please try again.");
+      setError(
+        t("lists.deleteError", {
+          defaultValue: "Failed to delete list. Please try again.",
+        })
+      );
     }
   }
 
@@ -113,11 +137,17 @@ export default function OpenListDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Open existing list</h2>
+          <h2 className="text-lg font-semibold">
+            {t("openList.title", {
+              defaultValue: "Open existing list",
+            })}
+          </h2>
           <button
             onClick={onClose}
             className="rounded-lg px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
-            aria-label="Close dialog"
+            aria-label={t("dialogs.close", {
+              defaultValue: "Close dialog",
+            })}
           >
             ✕
           </button>
@@ -128,24 +158,34 @@ export default function OpenListDialog({
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name…"
+            placeholder={t("lists.searchPlaceholder", {
+              defaultValue: "Search by name…",
+            })}
             className="w-full rounded-xl border border-neutral-300 px-3 py-2 outline-none focus:ring-2 focus:ring-accent-500 dark:border-neutral-700"
           />
         </div>
 
-        {loading && <p className="text-sm text-neutral-500">Loading…</p>}
+        {loading && (
+          <p className="text-sm text-neutral-500">
+            {t("lists.loading", { defaultValue: "Loading…" })}
+          </p>
+        )}
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         {!loading && !error && (
           <>
             {filtered.length === 0 ? (
-              <p className="text-sm text-neutral-500">No lists found.</p>
+              <p className="text-sm text-neutral-500">
+                {t("lists.empty", { defaultValue: "No lists found." })}
+              </p>
             ) : (
               <ul
                 className="max-h-80 space-y-2 overflow-y-auto"
                 onKeyDown={onKeyDown}
                 role="listbox"
-                aria-label="Available lists"
+                aria-label={t("lists.availableAria", {
+                  defaultValue: "Available lists",
+                })}
               >
                 {filtered.map((m) => (
                   <li
@@ -157,11 +197,17 @@ export default function OpenListDialog({
                       <button
                         className="flex flex-1 items-center justify-between text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-lg px-2 py-1"
                         onClick={() => handleChoose(m.id)}
-                        aria-label={`Open list ${m.name}`}
+                        aria-label={t("lists.openListLabel", {
+                          name: m.name,
+                          defaultValue: `Open list ${m.name}`,
+                        })}
                       >
                         <span className="font-medium">{m.name}</span>
                         <span className="text-xs text-neutral-500">
-                          Updated {new Date(m.updatedAt).toLocaleString()}
+                          {t("lists.updatedAt", {
+                            value: new Date(m.updatedAt).toLocaleString(),
+                            defaultValue: "Updated {{value}}",
+                          })}
                         </span>
                       </button>
 
@@ -173,8 +219,13 @@ export default function OpenListDialog({
                           handleDelete(m.id);
                         }}
                         className="ml-2 rounded-lg p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        aria-label={`Delete list ${m.name}`}
-                        title="Delete list"
+                        aria-label={t("lists.deleteListLabel", {
+                          name: m.name,
+                          defaultValue: `Delete list ${m.name}`,
+                        })}
+                        title={t("lists.deleteTitle", {
+                          defaultValue: "Delete list",
+                        })}
                       >
                         🗑
                       </button>
@@ -192,7 +243,7 @@ export default function OpenListDialog({
             onClick={onClose}
             className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
           >
-            Cancel
+            {t("buttons.cancel", { defaultValue: "Cancel" })}
           </button>
         </div>
       </div>

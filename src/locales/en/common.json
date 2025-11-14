@@ -109,5 +109,16 @@
   "bucket": {
     "collapse": "Collapse",
     "showAll": "Show all"
+  },
+  "theme": {
+    "label": "Theme:",
+    "default": "Default",
+    "forest": "Forest",
+    "ocean": "Ocean",
+    "lavender": "Lavender",
+    "sunset": "Sunset",
+    "mint": "Mint",
+    "paper": "Paper",
+    "candy": "Candy"
   }
 }
