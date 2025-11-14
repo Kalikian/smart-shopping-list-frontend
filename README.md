@@ -1,6 +1,6 @@
 # 🛒 Smart Shopping List (Frontend)
 
-**Live demo:** [https://kalikian.github.io/smart-shopping-list/](https://kalikian.github.io/smart-shopping-list/)
+**Live demo:** https://kalikian.github.io/smart-shopping-list/
 
 A lightweight, mobile-first shopping list built with **React + Vite**.  
 All data is stored **locally in the browser (LocalStorage)** — no backend required.
