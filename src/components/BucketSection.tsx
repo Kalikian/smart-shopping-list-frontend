@@ -5,6 +5,7 @@
 // - Scroll anchoring keeps viewport stable while items move
 
 import { type CSSProperties, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AnimatePresence,
   motion,
@@ -61,6 +62,7 @@ export default function BucketSection(props: BucketSectionProps) {
     onDelete,
   } = props;
 
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
 
   // Shared enter/exit transitions for rows (typed as TargetAndTransition)
@@ -117,7 +119,9 @@ export default function BucketSection(props: BucketSectionProps) {
           className="text-sm underline underline-offset-2"
           aria-expanded={open}
         >
-          {open ? "Collapse" : "Show all"}
+          {open
+            ? t("bucket.collapse", { defaultValue: "Collapse" })
+            : t("bucket.showAll", { defaultValue: "Show all" })}
         </button>
       </div>
 
