@@ -1,6 +1,7 @@
 // src/components/list-item/QuantityField.tsx
 // Mobile-friendly quantity input with +/- steppers.
 
+import { useTranslation } from "react-i18next";
 import type { Unit } from "../../constants/categories";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
 };
 
 export default function QuantityField({ id, amount, unit, onChange }: Props) {
+  const { t } = useTranslation("common");
+
   // Decimal for kg/L, integer otherwise
   const isDecimal = unit === "kg" || unit === "L";
   const step = isDecimal ? 0.1 : 1;
@@ -66,7 +69,8 @@ export default function QuantityField({ id, amount, unit, onChange }: Props) {
         htmlFor={id}
         className="block text-xs font-medium text-slate-500 mb-1"
       >
-        Qty
+        {/* Visible label uses translated amount label */}
+        {t("item.amountLabel")}
       </label>
 
       <div className="sm:flex sm:justify-center">
@@ -93,7 +97,7 @@ export default function QuantityField({ id, amount, unit, onChange }: Props) {
             value={amount ?? ""}
             onChange={onAmountTyped}
             onKeyDown={onAmountKeyDown}
-            aria-label="Quantity"
+            aria-label={t("item.amountLabel")}
           />
 
           <button
