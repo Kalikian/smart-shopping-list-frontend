@@ -1,48 +1,167 @@
 {
   "app": {
     "title": "Smart Shopping List",
-    "tagline": "Fast, simple shopping list."
+    "tagline": "Schnelle, einfache Einkaufsliste.",
+    "defaultListName": "Meine Liste"
   },
   "nav": {
-    "list": "List",
-    "settings": "Settings"
+    "list": "Liste",
+    "settings": "Einstellungen"
   },
   "buttons": {
-    "addItem": "Add item",
-    "addMany": "Add multiple",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "clearDone": "Clear completed",
-    "undo": "Undo",
-    "moveToLater": "Move to Later",
-    "moveToOpen": "Move to Open"
+    "addItem": "Artikel hinzufügen",
+    "addMany": "Mehrere hinzufügen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "deleteItem": "{{name}} löschen",
+    "editItem": "{{name}} bearbeiten",
+    "clearDone": "Erledigte löschen",
+    "undo": "Rückgängig",
+    "moveToLater": "Zu „Später“ verschieben",
+    "moveToOpen": "Zu „Offen“ verschieben",
+    "confirm": "Bestätigen",
+    "reset": "Zurücksetzen",
+    "close": "Schließen"
+  },
+  "list": {
+    "headerSummary": "{{open}} offen · {{total}} gesamt",
+    "remainingTitle": "Verbleibend",
+    "emptyOpen": "Keine offenen Artikel.",
+    "emptyLater": "Nichts für später geparkt.",
+    "emptyInCart": "Keine Artikel im Wagen."
   },
   "sections": {
-    "open": "Open",
-    "later": "Later",
-    "inCart": "In cart",
-    "done": "Done"
+    "open": "Offen",
+    "later": "Später",
+    "inCart": "Im Wagen",
+    "done": "Erledigt"
+  },
+  "categories": {
+    "Default": "Sonstiges",
+    "Produce": "Obst & Gemüse",
+    "Dairy": "Molkereiprodukte",
+    "Meat & Fish": "Fleisch & Fisch",
+    "Bakery": "Bäckerei",
+    "Pantry (Dry)": "Vorrat (Trocken)",
+    "Beverages": "Getränke",
+    "Frozen": "Tiefkühl",
+    "Snacks & Sweets": "Snacks & Süßes",
+    "Household & Care": "Haushalt & Pflege"
   },
   "emptyState": {
-    "title": "No items yet",
-    "body": "Add your first item to get started."
+    "title": "Noch keine Artikel",
+    "body": "Füge deinen ersten Artikel hinzu, um zu starten."
   },
   "item": {
-    "nameLabel": "Item",
-    "amountLabel": "Amount",
-    "unitLabel": "Unit",
-    "categoryLabel": "Category"
+    "nameLabel": "Artikel",
+    "namePlaceholder": "z. B. Bananen",
+    "amountLabel": "Menge",
+    "unitLabel": "Einheit",
+    "categoryLabel": "Kategorie"
   },
   "stats": {
-    "total": "Total: {{count}} items",
-    "open": "Open: {{count}}",
-    "later": "Later: {{count}}",
-    "inCart": "In cart: {{count}}",
-    "done": "Done: {{count}}"
+    "total": "Gesamt: {{count}} Artikel",
+    "open": "Offen: {{count}}",
+    "later": "Später: {{count}}",
+    "inCart": "Im Wagen: {{count}}",
+    "done": "Erledigt: {{count}}",
+    "headerAria": "Gesamt {{total}}, erledigt {{done}}",
+    "headerTitle": "Gesamt {{total}} • Erledigt {{done}}",
+    "doneSuffix": "erledigt"
   },
   "validation": {
-    "nameRequired": "Name must not be empty.",
-    "amountMin": "Amount must be at least 1."
+    "nameRequired": "Name darf nicht leer sein.",
+    "amountMin": "Menge muss mindestens 1 sein."
+  },
+  "createList": {
+    "title": "Neue Liste erstellen",
+    "nameLabel": "Listenname",
+    "placeholder": "z. B. wöchentlicher Einkauf",
+    "duplicateError": "Eine Liste mit diesem Namen existiert bereits.",
+    "duplicateInline": "Dieser Name wird bereits verwendet.",
+    "creating": "Wird erstellt …"
+  },
+  "errors": {
+    "unexpected": "Unerwarteter Fehler. Bitte versuche es erneut."
+  },
+  "features": {
+    "howItWorks": "So funktioniert es",
+    "fastInput": {
+      "title": "Schnelle Eingabe",
+      "desc": "Füge mehrere Artikel schnell hinzu."
+    },
+    "smartGrouping": {
+      "title": "Intelligente Gruppierung",
+      "desc": "Automatisch nach Gang/Kategorie sortiert."
+    },
+    "swipeComplete": {
+      "title": "Per Wischen erledigen",
+      "desc": "Nach rechts wischen, um Artikel in „Im Wagen“ zu verschieben, und nach links für „Später“."
+    },
+    "quickUndo": {
+      "title": "Schnelles Rückgängig",
+      "desc": "In „Im Wagen“ oder „Später“ nach rechts wischen, um den Artikel zurück zu „Offen“ zu senden."
+    },
+    "editDelete": {
+      "title": "Bearbeiten & löschen",
+      "desc": "Verwende den Stift zum Bearbeiten und den Papierkorb zum Entfernen eines Artikels."
+    }
+  },
+  "hero": {
+    "badge": "Schnell & einfach",
+    "title": "Erstelle in Sekunden intelligente Einkaufslisten.",
+    "subtitle": "Füge Artikel schnell hinzu, gruppiere nach Kategorie und hake sie im Laden ab.",
+    "createNew": "Neue Liste erstellen",
+    "myLists": "Meine Listen"
+  },
+  "bucket": {
+    "collapse": "Einklappen",
+    "showAll": "Alle anzeigen"
+  },
+  "theme": {
+    "label": "Theme:",
+    "default": "Standard",
+    "forest": "Wald",
+    "ocean": "Ozean",
+    "lavender": "Lavendel",
+    "sunset": "Sonnenuntergang",
+    "mint": "Minze",
+    "paper": "Papier",
+    "candy": "Candy"
+  },
+  "lists": {
+    "loadError": "Listen konnten nicht geladen werden.",
+    "notFound": "Liste nicht gefunden. Sie wurde möglicherweise entfernt.",
+    "deleteError": "Liste konnte nicht gelöscht werden.",
+    "searchPlaceholder": "Nach Namen suchen …",
+    "loading": "Wird geladen …",
+    "empty": "Keine Listen gefunden.",
+    "updatedAt": "Aktualisiert am {{value}}",
+    "currentTooltip": "Aktuell ausgewählt",
+    "selectTooltip": "Diese Liste auswählen",
+    "currentSuffix": "aktuell",
+    "deleteListLabel": "Liste {{name}} löschen",
+    "deleteConfirm": "Diese Liste dauerhaft löschen?",
+    "availableAria": "Verfügbare Listen",
+    "openListLabel": "Liste {{name}} öffnen",
+    "deleteTitle": "Liste löschen"
+  },
+  "openList": {
+    "title": "Bestehende Liste öffnen"
+  },
+  "dialogs": {
+    "close": "Dialog schließen"
+  },
+  "swipe": {
+    "leftDelete": "Löschen",
+    "rightDone": "Erledigt"
+  },
+  "quantity": {
+    "decrease": "Menge verringern",
+    "increase": "Menge erhöhen"
+  },
+  "addItem": {
+    "editTitle": "Artikel bearbeiten"
   }
 }
