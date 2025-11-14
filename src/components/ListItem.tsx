@@ -4,6 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { useSwipeable } from "react-swipeable";
+import { useTranslation } from "react-i18next";
 import { type CategoryLabel, type Unit } from "../constants/categories";
 import TrashButton from "./ui/TrashButton";
 import CategoryBadge from "./list-item/CategoryBadge";
@@ -36,6 +37,7 @@ export default function ListItem({
   onDelete,
   color,
 }: ListItemProps) {
+  const { t } = useTranslation("common");
   const [editing, setEditing] = useState(false);
 
   const categoryLabel: CategoryLabel = item.category ?? "Default";
@@ -180,7 +182,10 @@ export default function ListItem({
             {/* RIGHT */}
             <div className="flex items-center gap-2 shrink-0">
               <IconButton
-                aria-label={`Edit ${item.name}`}
+                aria-label={t("buttons.editItem", {
+                  name: item.name,
+                  defaultValue: `Edit ${item.name}`,
+                })}
                 onClick={handleEditOpen}
               >
                 <EditIcon />
@@ -188,7 +193,10 @@ export default function ListItem({
               {onDelete && (
                 <TrashButton
                   onClick={() => onDelete(item.id)}
-                  ariaLabel={`Delete ${item.name}`}
+                  ariaLabel={t("buttons.deleteItem", {
+                    name: item.name,
+                    defaultValue: `Delete ${item.name}`,
+                  })}
                 />
               )}
             </div>
