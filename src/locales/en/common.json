@@ -28,6 +28,18 @@
     "inCart": "In cart",
     "done": "Done"
   },
+  "categories": {
+    "Default": "Other",
+    "Produce": "Produce",
+    "Dairy": "Dairy",
+    "Meat & Fish": "Meat & Fish",
+    "Bakery": "Bakery",
+    "Pantry (Dry)": "Pantry (Dry)",
+    "Beverages": "Beverages",
+    "Frozen": "Frozen",
+    "Snacks & Sweets": "Snacks & Sweets",
+    "Household & Care": "Household & Care"
+  },
   "emptyState": {
     "title": "No items yet",
     "body": "Add your first item to get started."
