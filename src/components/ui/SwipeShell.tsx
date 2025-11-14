@@ -14,6 +14,7 @@ import {
 import type { PanInfo } from "framer-motion";
 import { Check, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type SwipeShellProps = {
   children: ReactNode;
@@ -40,14 +41,29 @@ export default function SwipeShell({
   disabled = false,
   leftIcon,
   rightIcon,
-  leftLabel = "Delete",
-  rightLabel = "Done",
+  leftLabel,
+  rightLabel,
 }: SwipeShellProps) {
+  const { t } = useTranslation("common");
+
   const reduceMotion = useReducedMotion();
   const controls = useAnimation();
   const x = useMotionValue(0);
   const [locked, setLocked] = useState(false); // prevent double-complete
   const [vibrated, setVibrated] = useState(false); // one-time haptic on passing threshold
+
+  // Localized fallback labels if caller did not provide custom text
+  const effectiveLeftLabel =
+    leftLabel ??
+    t("swipe.leftDelete", {
+      defaultValue: "Delete",
+    });
+
+  const effectiveRightLabel =
+    rightLabel ??
+    t("swipe.rightDone", {
+      defaultValue: "Done",
+    });
 
   // Progress 0..1 for each side
   const rightProgress = useTransform(x, [0, threshold], [0, 1]);
@@ -123,7 +139,7 @@ export default function SwipeShell({
               <span className="inline-flex h-5 w-5 items-center justify-center">
                 {leftIcon ?? <Trash2 className="h-5 w-5" />}
               </span>
-              <span className="text-sm text-red-700">{leftLabel}</span>
+              <span className="text-sm text-red-700">{effectiveLeftLabel}</span>
             </div>
           </motion.div>
         </div>
@@ -134,7 +150,9 @@ export default function SwipeShell({
             style={{ opacity: rightProgress }}
           >
             <div className="flex items-center gap-2 rounded-lg bg-emerald-50 ring-1 ring-emerald-100 px-2 py-1">
-              <span className="text-emerald-700 text-sm">{rightLabel}</span>
+              <span className="text-emerald-700 text-sm">
+                {effectiveRightLabel}
+              </span>
               <span className="inline-flex h-5 w-5 items-center justify-center">
                 {rightIcon ?? <Check className="h-5 w-5" />}
               </span>
