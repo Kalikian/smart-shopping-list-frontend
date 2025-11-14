@@ -5,11 +5,12 @@
 // - Calls onCreated(snapshot) on success, onClose() on cancel
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   createAndSelectListUnique,
   nameExists,
   type ListSnapshot,
-} from "../data/listStore/index"; //  Barrel
+} from "../data/listStore/index"; // Barrel
 
 type CreateListDialogProps = {
   open: boolean;
@@ -22,6 +23,8 @@ export default function CreateListDialog({
   onClose,
   onCreated,
 }: CreateListDialogProps) {
+  const { t } = useTranslation("common");
+
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export default function CreateListDialog({
       resetState();
       setTimeout(() => inputRef.current?.focus(), 0);
     } else {
-      // also ensure reset when closing programmatically
+      // Also ensure reset when closing programmatically
       setSubmitting(false);
     }
   }, [open]);
@@ -67,7 +70,11 @@ export default function CreateListDialog({
     try {
       const res = createAndSelectListUnique(trimmed);
       if (!res.ok && res.reason === "duplicate") {
-        setError("A list with this name already exists.");
+        setError(
+          t("createList.duplicateError", {
+            defaultValue: "A list with this name already exists.",
+          })
+        );
         return;
       }
       if (res.ok) {
@@ -78,11 +85,10 @@ export default function CreateListDialog({
       }
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unexpected error. Please try again."
-      );
+      const fallback = t("errors.unexpected", {
+        defaultValue: "Unexpected error. Please try again.",
+      });
+      setError(err instanceof Error ? err.message || fallback : fallback);
     } finally {
       // Safety: if the parent doesn't close immediately, button recovers
       setSubmitting(false);
@@ -102,7 +108,9 @@ export default function CreateListDialog({
         className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-neutral-900"
         onClick={(e) => e.stopPropagation()} // prevent backdrop close
       >
-        <h2 className="mb-4 text-lg font-semibold">Create a new list</h2>
+        <h2 className="mb-4 text-lg font-semibold">
+          {t("createList.title", { defaultValue: "Create a new list" })}
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -110,7 +118,7 @@ export default function CreateListDialog({
               htmlFor="listName"
               className="mb-1 block text-sm text-neutral-600 dark:text-neutral-300"
             >
-              List name
+              {t("createList.nameLabel", { defaultValue: "List name" })}
             </label>
             <input
               id="listName"
@@ -118,14 +126,18 @@ export default function CreateListDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={`w-full mt-1 ${isDuplicate ? "input-error" : ""}`}
-              placeholder="e.g., Weekly Groceries"
+              placeholder={t("createList.placeholder", {
+                defaultValue: "e.g., Weekly Groceries",
+              })}
               enterKeyHint="done"
               inputMode="text"
               autoComplete="off"
             />
             {isDuplicate && (
               <p className="mt-1 text-sm text-red-600">
-                This name is already in use.
+                {t("createList.duplicateInline", {
+                  defaultValue: "This name is already in use.",
+                })}
               </p>
             )}
             {error && !isDuplicate && (
@@ -139,7 +151,7 @@ export default function CreateListDialog({
               onClick={handleCancel}
               className="inline-flex min-w-24 items-center justify-center rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] px-4 py-2 text-sm text-[hsl(var(--text))] hover:bg-[hsl(var(--surface-2))]"
             >
-              Cancel
+              {t("buttons.cancel", { defaultValue: "Cancel" })}
             </button>
 
             <button
@@ -153,7 +165,11 @@ export default function CreateListDialog({
                   : "bg-[hsl(var(--surface-2))] text-[hsl(var(--muted))] border border-[hsl(var(--border))] opacity-60"
               }`}
             >
-              {submitting ? "Creating…" : "Confirm"}
+              {submitting
+                ? t("createList.creating", {
+                    defaultValue: "Creating…",
+                  })
+                : t("buttons.confirm", { defaultValue: "Confirm" })}
             </button>
           </div>
         </form>
