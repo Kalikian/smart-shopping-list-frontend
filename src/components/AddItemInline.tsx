@@ -10,6 +10,11 @@ import {
   type CategoryLabel,
   type Unit,
 } from "../constants/categories";
+import {
+  INTEGER_UNITS,
+  getAmountInputAttributes,
+  normalizeAmount,
+} from "../data/listStore/itemAmount";
 
 export type AddItemInlineSubmit = {
   name: string;
@@ -32,23 +37,6 @@ export type AddItemInlineProps = {
   inputId?: string;
 };
 
-const INTEGER_UNITS = new Set<Unit>(["pcs", "pack", "g", "mL"]);
-const DECIMAL_UNITS = new Set<Unit>(["kg", "L"]);
-
-function amountAttributesFor(unit: Unit) {
-  if (INTEGER_UNITS.has(unit)) {
-    return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
-  }
-  if (DECIMAL_UNITS.has(unit)) {
-    return {
-      step: 0.1,
-      inputMode: "decimal" as const,
-      pattern: undefined as string | undefined,
-    };
-  }
-  return { step: 1, inputMode: "numeric" as const, pattern: "[0-9]*" };
-}
-
 /** Global event name listened by the inline composer and fired by the FAB */
 export const ADD_EVENT = "app:add-item";
 
@@ -61,6 +49,7 @@ export default function AddItemInline({
   inputId,
 }: AddItemInlineProps) {
   const { t } = useTranslation("common");
+  const [open, setOpen] = useState<boolean>(forceOpen || Boolean(initial));
 
   // Effective title: use prop if provided, otherwise i18n default
   const effectiveTitle =
@@ -71,9 +60,6 @@ export default function AddItemInline({
 
   // Detect edit mode by presence of initial/onCancel
   const isEdit = Boolean(initial || onCancel);
-
-  // Open state: open if forced or when initial is provided
-  const [open, setOpen] = useState<boolean>(forceOpen || Boolean(initial));
 
   // Form state (seeded from `initial` or defaults)
   const [name, setName] = useState<string>(initial?.name ?? "");
@@ -121,30 +107,18 @@ export default function AddItemInline({
   }, [open, isEdit]);
 
   const canSubmit = name.trim().length > 0;
-  const amountAttrs = amountAttributesFor(unit);
+  const amountAttrs = getAmountInputAttributes(unit);
 
   // Normalize and submit
   const handleSubmit = () => {
     if (!canSubmit) return;
 
     const trimmed = name.trim();
-    const raw = amountStr.trim();
-
-    let parsed = DECIMAL_UNITS.has(unit)
-      ? Number.parseFloat(raw || "1")
-      : Number.parseInt(raw || "1", 10);
-
-    if (!Number.isFinite(parsed) || parsed <= 0) parsed = 1;
-
-    if (INTEGER_UNITS.has(unit)) {
-      parsed = Math.max(1, Math.trunc(parsed));
-    } else {
-      parsed = Math.max(1, Math.round(parsed * 10) / 10);
-    }
+    const normalizedAmount = normalizeAmount(amountStr, unit);
 
     onSubmit({
       name: trimmed,
-      amount: parsed,
+      amount: normalizedAmount,
       unit,
       category,
     });
