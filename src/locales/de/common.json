@@ -115,7 +115,7 @@
     },
     "languageSwitch": {
       "title": "Sprachwechsel",
-      "desc": "Nutze das Sprachmenü in der Kopfzeile, um zwischen Deutsch und Englisch zu wechseln."
+      "desc": "Nutze das Sprachmenü im Header, um zwischen Englisch, Deutsch und Armenisch zu wechseln."
     }
   },
   "hero": {

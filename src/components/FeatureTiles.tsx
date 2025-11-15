@@ -60,7 +60,7 @@ export default function FeatureTiles() {
       }),
       desc: t("features.languageSwitch.desc", {
         defaultValue:
-          "Use the language menu in the header to switch between English and German.",
+          "Use the language menu in the header to switch between English, German and Armenian.",
       }),
     },
   ];
