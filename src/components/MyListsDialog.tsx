@@ -149,7 +149,9 @@ export default function MyListsDialog({
             })}
             title={t("dialogs.close", { defaultValue: "Close dialog" })}
           >
-            <span aria-hidden>✕</span>
+            <span aria-hidden className="text-red-500 font-bold">
+              ✕
+            </span>
           </button>
         </div>
         <div className="mb-4">

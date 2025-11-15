@@ -184,7 +184,9 @@ export default function AddItemInline({
           aria-label={t("dialogs.close", { defaultValue: "Close dialog" })}
           title={t("dialogs.close", { defaultValue: "Close" })}
         >
-          <span aria-hidden>✕</span>
+          <span aria-hidden className="text-red-500 font-bold">
+            ✕
+          </span>
         </button>
       </div>
 
