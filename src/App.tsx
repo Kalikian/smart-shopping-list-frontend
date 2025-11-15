@@ -135,16 +135,9 @@ export default function App() {
 
       {/* Top bar: Theme (left) + Language (right) */}
       <div className="mx-auto max-w-screen-sm safe-x">
-        <div className="mt-2 grid grid-cols-2 items-center gap-4">
-          {/* Linke Hälfte: Theme-Switcher */}
-          <div className="flex justify-start">
-            <ThemeSwitcher />
-          </div>
-
-          {/* Rechte Hälfte: Language-Switcher */}
-          <div className="flex justify-end">
-            <LanguageSwitcher />
-          </div>
+        <div className="flex items-center justify-between">
+          <ThemeSwitcher />
+          <LanguageSwitcher />
         </div>
       </div>
 
