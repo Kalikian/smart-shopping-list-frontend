@@ -46,7 +46,6 @@ export const CATEGORY_DEFAULT: CategoryLabel = "Default";
 
 /** Ordered list of categories for selects & validation */
 export const CATEGORIES = [
-    "Default",
     "Produce",
     "Dairy",
     "Meat & Fish",
@@ -56,6 +55,7 @@ export const CATEGORIES = [
     "Frozen",
     "Snacks & Sweets",
     "Household & Care",
+    "Default",
 ] as const satisfies readonly CategoryLabel[];
 
 /** Supported units for amounts */
