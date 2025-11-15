@@ -200,7 +200,7 @@ export default function AddItemInline({
             id={inputId ?? "add-item-name"}
             ref={nameRef}
             type="text"
-            placeholder={t("item.placeholderExample", {
+            placeholder={t("item.namePlaceholder", {
               defaultValue: "e.g., Bananas",
             })}
             value={name}

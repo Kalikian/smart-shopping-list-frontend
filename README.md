@@ -15,6 +15,7 @@ All data is stored **locally in the browser (LocalStorage)** — no backend requ
 - 🧠 Category-based sorting (Produce, Dairy, etc.)
 - 🎨 Clean focus rings, HSL theme tokens
 - 💾 Persistent LocalStorage state (offline-first)
+- 🌍 Multilingual UI: **English, Deutsch, Հայերեն (Armenian)** with in-app language switcher
 - 📱 PWA-ready architecture for future offline mode
 
 ---
@@ -25,6 +26,7 @@ All data is stored **locally in the browser (LocalStorage)** — no backend requ
 - **Vite 7**
 - **Tailwind CSS**
 - **Framer Motion** (animations)
+- **i18next** (internationalization)
 - **ESLint / Prettier**
 - **LocalStorage** (data persistence)
 
