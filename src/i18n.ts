@@ -5,8 +5,8 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import enCommon from "./locales/en/common.json";
-import deCommon from "./locales/de/common.json"; // <-- Neu
-
+import deCommon from "./locales/de/common.json";
+import hyCommon from "./locales/hy/common.json";
 void i18n
     .use(initReactI18next)
     .init({
@@ -17,10 +17,11 @@ void i18n
             de: {
                 common: deCommon,
             },
+            hy: { common: hyCommon },
         },
         lng: "en", // default UI language
         fallbackLng: "en",
-        supportedLngs: ["en", "de"],
+        supportedLngs: ["en", "de", "hy"],
         ns: ["common"],
         defaultNS: "common",
         interpolation: {

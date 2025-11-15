@@ -2,7 +2,8 @@
   "language": {
     "label": "Language:",
     "en": "English",
-    "de": "German"
+    "de": "Deutsch",
+    "hy": "Հայերեն"
   },
   "app": {
     "title": "Smart Shopping List",

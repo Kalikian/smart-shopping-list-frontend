@@ -1,6 +1,6 @@
 // src/components/LanguageSwitcher.tsx
 // Language dropdown with same visual style as ThemeSwitcher.
-// Uses i18next to switch between "en" and "de".
+// Uses i18next to switch between "en", "de" and "hy".
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 const LANGS = [
   { code: "en", labelKey: "language.en", fallback: "English" },
   { code: "de", labelKey: "language.de", fallback: "German" },
+  { code: "hy", labelKey: "language.hy", fallback: "Հայերեն" },
 ] as const;
 
 type LangCode = (typeof LANGS)[number]["code"];
@@ -15,8 +16,13 @@ type LangCode = (typeof LANGS)[number]["code"];
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation("common");
 
-  // Normalize initial language to "en" / "de"
-  const initial: LangCode = i18n.language.startsWith("de") ? "de" : "en";
+  // Normalize initial language to one of: "en" | "de" | "hy"
+  const initial: LangCode = i18n.language.startsWith("de")
+    ? "de"
+    : i18n.language.startsWith("hy")
+    ? "hy"
+    : "en";
+
   const [lang, setLang] = useState<LangCode>(initial);
 
   // Apply language change whenever dropdown value changes
