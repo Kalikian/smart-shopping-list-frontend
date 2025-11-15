@@ -8,7 +8,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function PreferencesBar() {
   return (
-    <section className="mt-4 flex flex-wrap items-center justify-center">
+    <section className="flex flex-wrap items-center justify-center">
       <ThemeSelector />
       <LanguageSwitcher />
     </section>

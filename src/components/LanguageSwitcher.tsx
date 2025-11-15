@@ -27,7 +27,7 @@ export default function LanguageSwitcher() {
   const labelText = t("language.label", { defaultValue: "Language:" });
 
   return (
-    <div className="flex items-center gap-2 p-3">
+    <div className="flex items-center gap-2 p-1">
       <label className="text-sm">{labelText}</label>
       <select
         className="chip px-3 py-2 rounded-xl"

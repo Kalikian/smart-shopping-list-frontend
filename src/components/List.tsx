@@ -1,7 +1,7 @@
 // src/components/List.tsx
 // Sectioned list with Open / Later / In cart buckets.
 // - Smooth layout animations + same-section scroll anchoring
-// - TS-safe easing tuples for framer-motion
+// - TS-safe easing tuples for framer-motion (in utils/animation.ts)
 // - Buckets trigger move-back-to-Open via onPrimaryAction
 
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from "react";
@@ -11,8 +11,19 @@ import type { CategoryLabel } from "../constants/categories";
 import { sortItemsByCategory } from "../utils/sortItems";
 import AddItemInline, { type AddItemInlineSubmit } from "./AddItemInline";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { Transition, Easing } from "framer-motion";
 import BucketSection from "./BucketSection";
+import {
+  type ScrollEl,
+  getScrollParent,
+  getRelativeTop,
+  scrollByDelta,
+} from "../utils/scroll";
+import {
+  OPEN_ROW_SPRING,
+  SUCCESSOR_ROW_TWEEN,
+  SECTION_SPRING_SOFT,
+  INSTANT,
+} from "../utils/animation";
 
 type ListProps = {
   items: Item[];
@@ -25,31 +36,6 @@ type ListProps = {
 
 const NEUTRAL = `hsl(var(--cat-neutral, 0 0% 55%))`;
 type ActionSource = "later" | "done" | null;
-
-// ---- scroll helpers ----
-type ScrollEl = Window | Element;
-function getScrollParent(el: Element | null): ScrollEl {
-  if (!el) return window;
-  let p: Element | null = el.parentElement;
-  while (p) {
-    const { overflowY } = getComputedStyle(p);
-    if (/(auto|scroll|overlay)/.test(overflowY)) return p;
-    p = p.parentElement;
-  }
-  return window;
-}
-function getRelativeTop(el: Element | null, scrollEl: ScrollEl | null): number {
-  if (!el) return 0;
-  const rect = el.getBoundingClientRect();
-  if (!scrollEl || scrollEl === window) return rect.top;
-  const host = (scrollEl as Element).getBoundingClientRect();
-  return rect.top - host.top;
-}
-function scrollByDelta(scrollEl: ScrollEl | null, dy: number) {
-  if (!dy) return;
-  if (!scrollEl || scrollEl === window) window.scrollBy(0, dy);
-  else (scrollEl as Element).scrollTop += dy;
-}
 
 export default function List({
   items = [],
@@ -74,9 +60,8 @@ export default function List({
   );
   const doneItems = useMemo(() => sorted.filter((i) => i.done), [sorted]);
 
-  const openCount = openItems.length;
-  const laterCount = laterItems.length;
-  const remaining = openCount + laterCount;
+  // Remaining: only items in Open bucket
+  const remaining = openItems.length;
 
   // Animation flags
   const [laterAnimFromIdx, setLaterAnimFromIdx] = useState<number | null>(null);
@@ -125,28 +110,6 @@ export default function List({
 
   const colorFor = (c: CategoryLabel) =>
     c === "Default" ? NEUTRAL : getColorForCategory(c);
-
-  // ---- Transitions (TS-safe) ----
-  const OPEN_ROW_SPRING: Transition = {
-    type: "spring",
-    stiffness: 360,
-    damping: 42,
-    mass: 0.6,
-  };
-
-  const EASE_IN_OUT: Easing = [0.4, 0, 0.2, 1] as const;
-
-  const SUCCESSOR_ROW_TWEEN: Transition = {
-    type: "tween",
-    ease: EASE_IN_OUT,
-    duration: 0.75,
-  };
-  const SECTION_SPRING_SOFT: Transition = {
-    type: "spring",
-    stiffness: 220,
-    damping: 32,
-  };
-  const INSTANT: Transition = { duration: 0 };
 
   return (
     <section className="space-y-4">

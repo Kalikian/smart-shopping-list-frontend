@@ -10,8 +10,6 @@ import HeroCard from "./components/HeroCard";
 import FeatureTiles from "./components/FeatureTiles";
 import List from "./components/List";
 import Fab from "./components/Fab";
-// import ThemeSwitcher from "./components/ThemeSwitcher";
-// import LanguageSwitcher from "./components/LanguageSwitcher";
 import CreateListDialog from "./components/CreateListDialog";
 import MyListsDialog from "./components/MyListsDialog";
 
@@ -33,10 +31,8 @@ import {
   type ListSnapshot,
 } from "./data/listStore/index";
 import PreferencesBar from "./components/PreferencesBar";
-
-function newItemId() {
-  return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
+import { calculateListCounters } from "./utils/listMetrics";
+import { createItemId } from "./utils/ids";
 
 export default function App() {
   const { t } = useTranslation("common");
@@ -53,12 +49,11 @@ export default function App() {
     if (list) saveSnapshot(list);
   }, [list]);
 
-  // Header counters
+  // Header counters: align "open" with Open bucket (!done && !snoozed)
   const { total, open } = useMemo(() => {
     const items = list?.items ?? [];
-    const totalItems = items.length;
-    const done = items.filter((i) => i.done).length;
-    return { total: totalItems, open: totalItems - done };
+    const { total, open } = calculateListCounters(items);
+    return { total, open };
   }, [list]);
 
   // Mutations (no-ops if list doesn't exist yet)
@@ -85,7 +80,7 @@ export default function App() {
       if (!list) return;
       // Map composer payload to Item shape
       const item: Item = {
-        id: newItemId(),
+        id: createItemId(),
         name: draft.name,
         amount: draft.amount,
         unit: draft.unit,
