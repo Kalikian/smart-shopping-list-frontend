@@ -141,16 +141,17 @@ export default function MyListsDialog({
             {t("hero.myLists", { defaultValue: "My Lists" })}
           </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white/80 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] dark:border-neutral-700 dark:bg-neutral-900/80 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"
             aria-label={t("dialogs.close", {
               defaultValue: "Close dialog",
             })}
+            title={t("dialogs.close", { defaultValue: "Close dialog" })}
           >
-            ✕
+            <span aria-hidden>✕</span>
           </button>
         </div>
-
         <div className="mb-4">
           <input
             ref={inputRef}

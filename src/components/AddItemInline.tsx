@@ -180,11 +180,11 @@ export default function AddItemInline({
         <button
           type="button"
           onClick={() => (isEdit && onCancel ? onCancel() : setOpen(false))}
-          className="rounded-lg px-2 py-1 text-sm text-[hsl(var(--muted))] hover:bg-slate-50"
-          aria-label={t("buttons.cancel", { defaultValue: "Cancel" })}
-          title={t("buttons.cancel", { defaultValue: "Cancel" })}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[hsl(var(--border))] bg-white/80 text-sm text-[hsl(var(--muted))] hover:bg-slate-100 hover:text-[hsl(var(--text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
+          aria-label={t("dialogs.close", { defaultValue: "Close dialog" })}
+          title={t("dialogs.close", { defaultValue: "Close" })}
         >
-          ×
+          <span aria-hidden>✕</span>
         </button>
       </div>
 
