@@ -44,10 +44,17 @@ export default function ListItem({
   const isDefault = categoryLabel === "Default";
   const effectiveColor = isDefault ? undefined : color;
 
-  const bgTint = useMemo(
-    () => (isDefault ? "#fff" : alphaTint(effectiveColor!, 0.08)),
-    [effectiveColor, isDefault]
-  );
+  // Soft gradient background instead of flat color
+  const bgGradient = useMemo(() => {
+    if (isDefault) {
+      // Neutral, aber leicht lebendiger als reines Weiß
+      return "linear-gradient(135deg,#ffffff,#f8fafc)";
+    }
+    const base = alphaTint(effectiveColor!, 0.06); // top
+    const strong = alphaTint(effectiveColor!, 0.18); // bottom
+    return `linear-gradient(135deg, ${base}, ${strong})`;
+  }, [effectiveColor, isDefault]);
+
   const brdTint = useMemo(
     () => (isDefault ? "rgba(0,0,0,0.10)" : alphaTint(effectiveColor!, 0.22)),
     [effectiveColor, isDefault]
@@ -153,7 +160,7 @@ export default function ListItem({
                 isSwiping || dragX !== 0
                   ? `translateX(${dragX}px)`
                   : "translateX(0)",
-              backgroundColor: bgTint,
+              background: bgGradient,
               borderColor: brdTint,
             }}
           >

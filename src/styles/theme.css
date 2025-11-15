@@ -25,15 +25,15 @@
   --shadow-md: 0 8px 24px -8px hsl(220 43% 11% / 0.12);
 
   /* Category hues */
-  --cat-produce: 145 62% 40%;
-  --cat-dairy: 48 92% 72%;
-  --cat-meat: 355 70% 50%;
-  --cat-bakery: 38 100% 54%;
-  --cat-pantry: 24 85% 46%;
-  --cat-beverages: 268 85% 56%;
-  --cat-frozen: 205 88% 62%;
-  --cat-snacks: 330 65% 55%;
-  --cat-household: 30 12% 46%;
+  --cat-produce: 145 100% 38%;
+  --cat-dairy: 48 100% 78%;
+  --cat-meat: 355 100% 52%;
+  --cat-bakery: 38 100% 55%;
+  --cat-pantry: 24 100% 38%;
+  --cat-beverages: 268 100% 56%;
+  --cat-frozen: 205 100% 60%;
+  --cat-snacks: 330 100% 55%;
+  --cat-household: 30 10% 45%;
   --cat-neutral: 0 0% 55%;
 }
 
@@ -205,6 +205,56 @@
   .select-fix:focus {
     border-color: hsl(var(--accent));
     box-shadow: 0 0 0 2px hsl(var(--accent) / 0.35);
+  }
+  /* Item shell with soft category gradient */
+  .item-shell {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 0.75rem 0.75rem; /* kannst du auch Tailwind lassen und hier nur BG nutzen */
+    background-color: hsl(var(--surface));
+    box-shadow: var(--shadow-sm);
+
+    /* gradient overlay */
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--item-tint) / 0.16),
+      hsl(var(--item-tint) / 0.02)
+    );
+    background-blend-mode: screen; /* mischt sich schön mit surface */
+  }
+
+  /* Fallback, falls keine Kategorie gesetzt ist */
+  .item-shell--neutral {
+    --item-tint: var(--cat-neutral);
+  }
+
+  /* Category-specific tints (nutzen deine Tokens) */
+  .item-shell--produce {
+    --item-tint: var(--cat-produce);
+  }
+  .item-shell--dairy {
+    --item-tint: var(--cat-dairy);
+  }
+  .item-shell--meat {
+    --item-tint: var(--cat-meat);
+  }
+  .item-shell--bakery {
+    --item-tint: var(--cat-bakery);
+  }
+  .item-shell--pantry {
+    --item-tint: var(--cat-pantry);
+  }
+  .item-shell--beverages {
+    --item-tint: var(--cat-beverages);
+  }
+  .item-shell--frozen {
+    --item-tint: var(--cat-frozen);
+  }
+  .item-shell--snacks {
+    --item-tint: var(--cat-snacks);
+  }
+  .item-shell--household {
+    --item-tint: var(--cat-household);
   }
 }
 
