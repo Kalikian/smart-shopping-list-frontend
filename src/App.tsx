@@ -12,15 +12,16 @@ import List from "./components/List";
 import Fab from "./components/Fab";
 import CreateListDialog from "./components/CreateListDialog";
 import MyListsDialog from "./components/MyListsDialog";
-
-import type { Item } from "./components/ListItem";
-import type { CategoryLabel } from "./constants/categories";
-import { getColorVarForCategory } from "./constants/categories";
+import PreferencesBar from "./components/PreferencesBar";
+import CurrentListHeader from "./components/CurrentListHeader";
 import {
   ADD_EVENT,
   type AddItemInlineSubmit,
 } from "./components/AddItemInline";
 
+import type { Item } from "./components/ListItem";
+import type { CategoryLabel } from "./constants/categories";
+import { getColorVarForCategory } from "./constants/categories";
 import {
   loadSnapshot,
   saveSnapshot,
@@ -30,7 +31,6 @@ import {
   removeItem as removeItemStore,
   type ListSnapshot,
 } from "./data/listStore/index";
-import PreferencesBar from "./components/PreferencesBar";
 import { calculateListCounters } from "./utils/listMetrics";
 import { createItemId } from "./utils/ids";
 
@@ -144,16 +144,11 @@ export default function App() {
         {/* Render list ONLY if it exists */}
         {list && (
           <section id="current-list" className="scroll-mt-20">
-            <div className="mb-2 mt-6 flex items-center justify-between">
-              <h2 className="text-base font-semibold">{currentListName}</h2>
-              <span className="text-sm opacity-70">
-                {t("list.headerSummary", {
-                  open,
-                  total,
-                  defaultValue: "{{open}} open · {{total}} total",
-                })}
-              </span>
-            </div>
+            <CurrentListHeader
+              name={currentListName}
+              open={open}
+              total={total}
+            />
 
             <List
               items={list.items}
