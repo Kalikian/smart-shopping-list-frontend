@@ -10,8 +10,8 @@ import HeroCard from "./components/HeroCard";
 import FeatureTiles from "./components/FeatureTiles";
 import List from "./components/List";
 import Fab from "./components/Fab";
-import ThemeSwitcher from "./components/ThemeSwitcher";
-import LanguageSwitcher from "./components/LanguageSwitcher";
+// import ThemeSwitcher from "./components/ThemeSwitcher";
+// import LanguageSwitcher from "./components/LanguageSwitcher";
 import CreateListDialog from "./components/CreateListDialog";
 import MyListsDialog from "./components/MyListsDialog";
 
@@ -32,6 +32,7 @@ import {
   removeItem as removeItemStore,
   type ListSnapshot,
 } from "./data/listStore/index";
+import PreferencesBar from "./components/PreferencesBar";
 
 function newItemId() {
   return `it-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -133,12 +134,8 @@ export default function App() {
         title={t("app.title", { defaultValue: "Smart Shopping List" })}
       />
 
-      {/* Top bar: Theme (left) + Language (right) */}
       <div className="mx-auto max-w-screen-sm safe-x">
-        <div className="flex items-center justify-between">
-          <ThemeSwitcher />
-          <LanguageSwitcher />
-        </div>
+        <PreferencesBar />
       </div>
 
       <main className="mx-auto max-w-screen-sm safe-x pb-28 pt-4">
